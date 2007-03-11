@@ -1,0 +1,1 @@
+SUBDIRS = libnsm nsm

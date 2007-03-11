@@ -1,0 +1,25 @@
+=============
+Version 0.2.0
+=============
+The first release to be written 100% in C#.
+It supports the same features as the previous Python version, but caches the repository's XML file now.
+
+=============
+Version 0.1.0
+=============
+This is the initial public release.
+
+Supported MIME types:
+    * application/x-compressed-tar (tar.gz, tgz)
+	* application/x-bzip-compressed-tar (tar.bz2)
+	* application/zip
+    * application/x-tar
+    * text/x-python
+    
+Supported integrity checks:
+	* GnuPG signature
+	* md5 and sha1 checksum
+	    
+Patches for applications included:
+	* deskbar-applet
+	

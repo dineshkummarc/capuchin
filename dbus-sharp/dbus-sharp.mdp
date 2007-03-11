@@ -1,0 +1,52 @@
+<Project name="dbus-sharp" fileversion="2.0" language="C#" clr-version="Net_2_0" ctype="DotNetProject">
+  <Configurations active="Debug">
+    <Configuration name="Debug" ctype="DotNetProjectConfiguration">
+      <Output directory="./bin/Debug" assembly="NDesk.DBus" />
+      <Build debugmode="True" target="Library" />
+      <Execution runwithwarnings="True" consolepause="False" runtime="MsNet" clr-version="Net_2_0" />
+      <CodeGeneration compiler="Csc" warninglevel="4" optimize="True" unsafecodeallowed="True" generateoverflowchecks="True" mainclass="" generatexmldocumentation="False" ctype="CSharpCompilerParameters" />
+    </Configuration>
+    <Configuration name="Release" ctype="DotNetProjectConfiguration">
+      <Output directory="./bin/Release" assembly="NDesk.DBus" />
+      <Build debugmode="False" target="Library" />
+      <Execution runwithwarnings="True" consolepause="False" runtime="MsNet" clr-version="Net_2_0" />
+      <CodeGeneration compiler="Csc" warninglevel="4" optimize="True" unsafecodeallowed="True" generateoverflowchecks="True" mainclass="" generatexmldocumentation="False" ctype="CSharpCompilerParameters" />
+    </Configuration>
+  </Configurations>
+  <DeployTargets />
+  <Contents>
+    <File name="./Address.cs" subtype="Code" buildaction="Compile" />
+    <File name="./AssemblyInfo.cs" subtype="Code" buildaction="Compile" />
+    <File name="./Authentication.cs" subtype="Code" buildaction="Compile" />
+    <File name="./Bus.cs" subtype="Code" buildaction="Compile" />
+    <File name="./BusObject.cs" subtype="Code" buildaction="Compile" />
+    <File name="./Connection.cs" subtype="Code" buildaction="Compile" />
+    <File name="./DBus.cs" subtype="Code" buildaction="Compile" />
+    <File name="./DProxy.cs" subtype="Code" buildaction="Compile" />
+    <File name="./ExportObject.cs" subtype="Code" buildaction="Compile" />
+    <File name="./Introspection.cs" subtype="Code" buildaction="Compile" />
+    <File name="./IntrospectionSchema.cs" subtype="Code" buildaction="Compile" />
+    <File name="./Mapper.cs" subtype="Code" buildaction="Compile" />
+    <File name="./Message.cs" subtype="Code" buildaction="Compile" />
+    <File name="./MessageFilter.cs" subtype="Code" buildaction="Compile" />
+    <File name="./MessageReader.cs" subtype="Code" buildaction="Compile" />
+    <File name="./MessageWriter.cs" subtype="Code" buildaction="Compile" />
+    <File name="./Protocol.cs" subtype="Code" buildaction="Compile" />
+    <File name="./Server.cs" subtype="Code" buildaction="Compile" />
+    <File name="./Signature.cs" subtype="Code" buildaction="Compile" />
+    <File name="./SocketTransport.cs" subtype="Code" buildaction="Compile" />
+    <File name="./Transport.cs" subtype="Code" buildaction="Compile" />
+    <File name="./UnixMonoTransport.cs" subtype="Code" buildaction="Compile" />
+    <File name="./UnixNativeTransport.cs" subtype="Code" buildaction="Compile" />
+    <File name="./UnixTransport.cs" subtype="Code" buildaction="Compile" />
+    <File name="./Wrapper.cs" subtype="Code" buildaction="Compile" />
+  </Contents>
+  <References>
+    <ProjectReference type="Gac" localcopy="True" refto="Mono.Posix, Version=2.0.0.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756" />
+    <ProjectReference type="Gac" localcopy="True" refto="System.Xml, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+    <ProjectReference type="Gac" localcopy="True" refto="System, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  </References>
+  <DeploymentInformation strategy="File">
+    <excludeFiles />
+  </DeploymentInformation>
+</Project>
