@@ -1,7 +1,7 @@
-AC_INIT(src/nsm/Main.cs)
+AC_INIT(src/mukkumukku/Main.cs)
 AC_CANONICAL_SYSTEM
 AC_PREREQ(2.54)
-AM_INIT_AUTOMAKE(new-stuff-manager, 0.2.3)
+AM_INIT_AUTOMAKE(mukkumukku, 0.2.3)
 AM_MAINTAINER_MODE
 
 AC_PROG_INSTALL
@@ -87,18 +87,18 @@ AC_OUTPUT([
 Makefile
 data/Makefile
 dbus-sharp/Makefile
-nsm-sharp.pc
+mukkumukku-sharp.pc
 specs/Makefile
 src/Makefile
-src/libnsm/Makefile
-src/libnsm/Globals.cs
-src/libnsm/AssemblyInfo.cs
-src/nsm/Makefile
-src/nsm/AssemblyInfo.cs
+src/libmukkumukku/Makefile
+src/libmukkumukku/Globals.cs
+src/libmukkumukku/AssemblyInfo.cs
+src/mukkumukku/Makefile
+src/mukkumukku/AssemblyInfo.cs
 ])
 
 echo "
-new-stuff-manager-$VERSION
+mukkumukku-$VERSION
 
     Install Prefix:               ${prefix}
     Datadir:                      ${expanded_datadir}

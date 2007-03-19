@@ -1,7 +1,7 @@
 #! /bin/sh
 
-PROJECT=NewStuffManager
-FILE=src/libnsm/NewStuffManager.cs
+PROJECT=MukkuMukku
+FILE=src/libmukkumukku/NewStuffManager.cs
 CONFIGURE=configure.ac
 
 : ${AUTOCONF=autoconf}
