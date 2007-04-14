@@ -27,7 +27,6 @@ namespace Nsm.Compression
 		}
 		
 		public void Run() {
-		    Gnome.Vfs.Vfs.Initialize ();
 		    string mime_type = Gnome.Vfs.MimeType.GetMimeTypeForUri(path);
 		    
 		  IExtracter extracter = null;

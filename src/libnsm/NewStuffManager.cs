@@ -23,6 +23,7 @@ namespace Nsm
 	    {
 	        this.Objects = new Dictionary<string, ObjectPath>();
 	        this.CreateCacheIfNotExists();
+	        Gnome.Vfs.Vfs.Initialize ();
 	    }
 	    
 	    /// <summary>Request an application specific <see cref="Nsm.NewStuff /> object</summary>

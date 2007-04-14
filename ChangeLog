@@ -1,3 +1,19 @@
+2007-04-14  Sebastian Pölsterl  <marduk@k-d-w.org>
+
+	* src/libnsm/NewStuffManager.cs
+	* src/libnsm/Downloaders/HttpDownloader.cs
+	* src/libnsm/Downloaders/AbstractDownloader.cs
+	* src/libnsm/Downloaders/IDownloader.cs
+	* src/libnsm/Downloaders/FtpDownloader.cs
+	* src/libnsm/Compression/Decompresser.cs
+	* src/libnsm/Downloader.cs
+	* src/libnsm/NewStuff.cs
+	* src/libnsm/Makefile.am
+	* src/libnsm/DownloadItem.cs
+	* src/nsm/nsm.mdp
+	* TODO:
+	Refactored downloading
+
 2007-02-09  Sebastian Pölsterl  <marduk@k-d-w.org>
 
 	* configure.ac:

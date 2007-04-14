@@ -16,7 +16,10 @@ libnsm_sources = \
 	Repository.cs \
 	NewStuff.cs \
 	ConfParser.cs \
-	Downloader.cs \
+	DownloadItem.cs \
+	Downloaders/AbstractDownloader.cs \
+	Downloaders/HttpDownloader.cs \
+	Downloaders/FtpDownloader.cs \	
 	Compression/Decompresser.cs \
 	Compression/IExtracter.cs \
 	Compression/TarBz2Extracter.cs \

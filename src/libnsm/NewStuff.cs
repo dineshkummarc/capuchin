@@ -208,12 +208,13 @@ namespace Nsm
 		        return;
 			Console.WriteLine("*** Updating {0}", plugin_id);            
             
-            Downloader dl = new Downloader(this.Repo[plugin_id].Url, this.Options["install-path"], this.Repo[plugin_id].Signature, this.Repo[plugin_id].Checksum);
-			dl.Status += new StatusHandler(
+            DownloadItem dlclient = new DownloadItem(this.Repo[plugin_id].Url, this.Options["install-path"], this.Repo[plugin_id].Signature, this.Repo[plugin_id].Checksum);
+			
+			dlclient.Downloader.Status += new StatusHandler(
 			 delegate(string action, double progress) { InvokeSignal(SignalType.DownloadStatus, action, progress); }
 			);
 			
-			DownloaderDel dlDel = new DownloaderDel(dl.Run);
+			DownloaderDel dlDel = new DownloaderDel(dlclient.Downloader.Run);
             AsyncCallback dlCallback = new AsyncCallback(DownloaderFinishedCallback);
             dlDel.BeginInvoke(dlCallback, plugin_id);
 		}
