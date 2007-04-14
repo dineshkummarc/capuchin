@@ -3,12 +3,12 @@ if ENABLE_INTERNAL_NDESKDBUS
 SUBDIRS += dbus-sharp
 endif
 SUBDIRS += src
-bin_SCRIPTS = mukkumukku
-EXTRA_DIST = mukkumukku-sharp.pc.in \
-    mukkumukku.in
+bin_SCRIPTS = new-stuff-manager
+EXTRA_DIST = nsm-sharp.pc.in \
+    new-stuff-manager.in
 
 pkgconfigdir = $(libdir)/pkgconfig
-pkgconfig_DATA = mukkumukku-sharp.pc
+pkgconfig_DATA = nsm-sharp.pc
 
 REWRITE = \
 	sed -e "s|\@prefix\@|$(prefix)|g"       \
@@ -16,12 +16,12 @@ REWRITE = \
 	    -e "s|\@bindir\@|$(bindir)|g"		\
 	    -e "s|\@MONO\@|$(MONO)|g" 
 
-$(bin_SCRIPTS): $(srcdir)/mukkumukku.in Makefile
-	$(REWRITE) $(srcdir)/mukkumukku.in > $@.tmp
+$(bin_SCRIPTS): $(srcdir)/new-stuff-manager.in Makefile
+	$(REWRITE) $(srcdir)/new-stuff-manager.in > $@.tmp
 	mv $@.tmp $@
 
 CLEANFILES = \
-	mukkumukku
+	new-stuff-manager
 
 DISTCLEANFILES = \
 	configure \

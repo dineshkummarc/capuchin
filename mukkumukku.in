@@ -1,2 +1,0 @@
-#!/bin/sh
-exec @MONO@ @prefix@/lib/mukkumukku/mukkumukku.exe $MONO_EXTRA_ARGS "$@"

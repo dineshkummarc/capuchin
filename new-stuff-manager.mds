@@ -3,14 +3,15 @@
     <Configuration name="Debug" ctype="CombineConfiguration">
       <Entry build="True" name="dbus-sharp" configuration="Debug" />
       <Entry build="True" name="nsm" configuration="Debug" />
-      <Entry build="True" name="libmukkumukku" configuration="Debug" />
+      <Entry build="True" name="libnsm" configuration="Debug" />
     </Configuration>
     <Configuration name="Release" ctype="CombineConfiguration">
       <Entry build="True" name="dbus-sharp" configuration="Release" />
       <Entry build="True" name="nsm" configuration="Release" />
-      <Entry build="True" name="libmukkumukku" configuration="Release" />
+      <Entry build="True" name="libnsm" configuration="Release" />
     </Configuration>
   </Configurations>
+  <DeployTargets />
   <StartMode startupentry="nsm" single="True">
     <Execute type="None" entry="dbus-sharp" />
     <Execute type="None" entry="nsm" />

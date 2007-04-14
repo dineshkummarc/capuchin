@@ -1,1 +1,1 @@
-SUBDIRS = libmukkumukku mukkumukku
+SUBDIRS = libnsm nsm
