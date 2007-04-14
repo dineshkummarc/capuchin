@@ -210,7 +210,7 @@ namespace Nsm
             
             DownloadItem dlclient = new DownloadItem(this.Repo[plugin_id].Url, this.Options["install-path"], this.Repo[plugin_id].Signature, this.Repo[plugin_id].Checksum);
 			
-			dlclient.Downloader.Status += new StatusHandler(
+			dlclient.Downloader.Status += new Nsm.Downloaders.StatusHandler(
 			 delegate(string action, double progress) { InvokeSignal(SignalType.DownloadStatus, action, progress); }
 			);
 			

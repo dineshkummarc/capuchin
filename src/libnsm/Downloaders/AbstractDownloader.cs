@@ -4,7 +4,7 @@ using System.Net;
 using System.IO;
 using System.Threading;
 
-namespace Nsm
+namespace Nsm.Downloaders
 {
 	
 	internal delegate void StatusHandler(string action, double progress);

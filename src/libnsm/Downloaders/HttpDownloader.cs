@@ -3,7 +3,7 @@ using System;
 using System.IO;
 using System.Net;
 
-namespace Nsm
+namespace Nsm.Downloaders
 {
 	
 	/// <summary>Download files over HTTP</summary>

@@ -1,7 +1,7 @@
 
 using System;
 
-namespace Nsm
+namespace Nsm.Downloaders
 {
 	
 	
