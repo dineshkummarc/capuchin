@@ -17,7 +17,6 @@ libnsm_sources = \
 	NewStuff.cs \
 	ConfParser.cs \
 	Download.cs \
-	DownloadClient.cs \
 	DownloadManager.cs \
 	Downloaders/AbstractDownloader.cs \
 	Downloaders/HttpDownloader.cs \

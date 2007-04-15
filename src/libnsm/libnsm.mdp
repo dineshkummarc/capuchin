@@ -18,7 +18,6 @@
     <File name="./ConfParser.cs" subtype="Code" buildaction="Compile" />
     <File name="./Repository.cs" subtype="Code" buildaction="Compile" />
     <File name="./NewStuffManager.cs" subtype="Code" buildaction="Compile" />
-    <File name="./DownloadClient.cs" subtype="Code" buildaction="Compile" />
     <File name="./Compression/Decompresser.cs" subtype="Code" buildaction="Compile" />
     <File name="./Compression/IExtracter.cs" subtype="Code" buildaction="Compile" />
     <File name="./Compression/TarBz2Extracter.cs" subtype="Code" buildaction="Compile" />

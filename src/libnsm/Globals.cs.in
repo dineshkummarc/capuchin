@@ -14,6 +14,7 @@ namespace Nsm
 	    public readonly string LOCAL_CACHE_DIR;
 	    
 	    public static readonly Globals Instance = new Globals();
+	    public static readonly DownloadManager DLM = new DownloadManager();
 	    
 	    private Globals()
 	    {

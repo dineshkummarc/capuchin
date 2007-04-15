@@ -2,6 +2,27 @@
 
 	* src/libnsm/Downloaders/HttpDownloader.cs
 	* src/libnsm/Downloaders/AbstractDownloader.cs
+	* src/libnsm/Downloaders/FtpDownloader.cs
+	* src/libnsm/Globals.cs.in
+	* src/libnsm/libnsm.mdp
+	* src/libnsm/NewStuff.cs
+	* src/libnsm/DownloadManager.cs
+	* src/libnsm/Makefile.am
+	* src/libnsm/DownloadClient.cs
+	* tests
+	* examples
+	* examples/DownloadManager.py
+	* examples/DBusTester.py:
+	Got rid of DownloadClient. DownloadManager now handels
+	all the downloading.
+	
+	Renamed tests dir to examples and added DownloadManager
+	example
+
+2007-04-15  Sebastian Pölsterl  <marduk@k-d-w.org>
+
+	* src/libnsm/Downloaders/HttpDownloader.cs
+	* src/libnsm/Downloaders/AbstractDownloader.cs
 	* src/libnsm/DownloadItem.cs
 	* src/libnsm/NewStuff.cs
 	* src/libnsm/DownloadManager.cs

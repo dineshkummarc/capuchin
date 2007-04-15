@@ -7,7 +7,7 @@ using System.Threading;
 namespace Nsm.Downloaders
 {
 	
-	internal delegate void StatusHandler(string action, double progress);
+	internal delegate void StatusHandler(int id, string action, double progress);
     
     /// <summary>Abstract base class to download a file</summary>
 	internal abstract class AbstractDownloader : IDisposable
@@ -26,12 +26,14 @@ namespace Nsm.Downloaders
         protected WebResponse webResponse;
 		
 		public event StatusHandler Status;
+		public readonly int Id;
 	    
 	    /// <param name="download_url">Url of file to download</param>
 	    /// <param name="download_dest">Directory where to save the file</param>
 	    /// <param name="checksumField">Checksum instance of file or null</param>
-		public AbstractDownloader(string download_url, string download_dest, string signature, checksum checksumField)
+		public AbstractDownloader(int id, string download_url, string download_dest, string signature, checksum checksumField)
 		{
+			this.Id = id;
 		    this.checksumField = checksumField;
 		    this.download_url = download_url;
 		    this.download_dest = download_dest;
@@ -115,7 +117,7 @@ namespace Nsm.Downloaders
 		/// <param name="progress">The progress of the current operation (0.0 to 1.0)</param>
 		protected void OnStatus(string action, double progress) {
             if (Status != null) {
-                Status(action, progress);
+                Status(this.Id, action, progress);
             }
 		}
 	}

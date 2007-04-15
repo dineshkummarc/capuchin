@@ -7,7 +7,6 @@ using System.Xml;
 using System.Xml.Serialization;
 using System.Threading;
 using NDesk.DBus;
-using Nsm.Downloaders;
 
 namespace Nsm
 {	
@@ -90,10 +89,9 @@ namespace Nsm
 		protected bool ForceUpdate;
 		protected string LocalRepo;
 	    protected IDictionary<string, string> Options;
+	    protected IDictionary<int, string> DownloadToPluginId;
 	    
 	    private bool disposed = false;
-	   
-        public delegate void DownloaderDel();
 	    
 	    /// <param name="application_name">Name of the application that object is related to</param>
 	    /// <remarks><code>application_name</code> must be the name of a configuration file without the .conf ending</remarks>
@@ -107,6 +105,11 @@ namespace Nsm
 			
 			ConfParser cp = new ConfParser(application_name);
 			this.Options = cp.Options;
+			
+			// Used to map DownloadId to PluginID
+			this.DownloadToPluginId = new Dictionary<int, string>();
+			// Forward DownloadStatus event
+			Globals.DLM.DownloadStatus += new DownloadManager.DownloadStatusHandler( this.OnDownloadStatus );
 		}
 		
 		~NewStuff()
@@ -207,17 +210,11 @@ namespace Nsm
 		{
 		    if (!this.Repo.ContainsKey(plugin_id))
 		        return;
-			Console.WriteLine("*** Updating {0}", plugin_id);            
-            
-            AbstractDownloader dl = DownloadClient.GetDownloader(this.Repo[plugin_id].Url, this.Options["install-path"], this.Repo[plugin_id].Signature, this.Repo[plugin_id].Checksum);
+			Console.WriteLine("*** Updating {0}", plugin_id);
 			
-			dl.Status += new StatusHandler(
-			 delegate(string action, double progress) { InvokeSignal(SignalType.DownloadStatus, action, progress); }
-			);
+			int dlid = Globals.DLM.DownloadFile(this.Repo[plugin_id].Url, this.Options["install-path"], this.Repo[plugin_id].Signature, this.Repo[plugin_id].Checksum);
 			
-			DownloaderDel dlDel = new DownloaderDel(dl.Run);
-            AsyncCallback dlCallback = new AsyncCallback(DownloaderFinishedCallback);
-            dlDel.BeginInvoke(dlCallback, plugin_id);
+			this.DownloadToPluginId.Add(dlid, plugin_id);
 		}
 		
 		/// <summary>Get tags for the plugin with ID <code>plugin_id</code></summary>
@@ -246,12 +243,6 @@ namespace Nsm
     		InvokeSignal(SignalType.Closed);
     	}
     	
-    	/// <summary>Callback function to async <see cref="Downloader" /> Thread</summary>
-    	private void DownloaderFinishedCallback(IAsyncResult ar) {
-            Console.WriteLine("*** Update complete for {0}", (string)ar.AsyncState);    	   
-            InvokeSignal(SignalType.Updated, (string)ar.AsyncState);
-    	}
-    	
     	/// <summary>Check whether repository's XML file has to be downloaded again</summary>
     	/// <exception cref="Nsm.RepositoryConnectionException">
     	/// Thrown if connection to repository failed
@@ -270,6 +261,16 @@ namespace Nsm
         	} catch (WebException e) {
         		throw new RepositoryConnectionException("Connection to repository "+this.Options["repo"]+" failed", e);
         	}
+    	}
+    	
+    	private void OnDownloadStatus(int dlid, string action, double progress)
+    	{
+    		base.InvokeSignal(SignalType.DownloadStatus, action, progress);
+    		if ((int)progress == 1)
+    		{
+    			base.InvokeSignal(SignalType.Updated, this.DownloadToPluginId[dlid]);
+    			this.DownloadToPluginId.Remove(dlid);
+    		}
     	}
     	
     	/// <summary>Check whether first argument is newer as second one</summary>
