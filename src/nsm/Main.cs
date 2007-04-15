@@ -11,7 +11,8 @@ namespace newstuffmanager
 	class MainClass
 	{		
 		public const string OBJECT_SERVICE = "org.gnome.NewStuffManager";
-		public const string OBJECT_PATH = "/org/gnome/NewStuffManager";
+		public const string NEWSTUFFMANAGER_OBJECT_PATH = "/org/gnome/NewStuffManager";
+		public const string DOWNLOADMANAGER_OBJECT_PATH = "/org/gnome/NewStuffManager/DownloadManager";
 		
 		static Options opts = new Options();
 	
@@ -20,7 +21,10 @@ namespace newstuffmanager
 			opts.ProcessArgs(args);
 			
 			NewStuffManager nsm = new NewStuffManager();
-			Bus.Session.Register(OBJECT_SERVICE, new ObjectPath(OBJECT_PATH), nsm);
+			Bus.Session.Register(OBJECT_SERVICE, new ObjectPath(NEWSTUFFMANAGER_OBJECT_PATH), nsm);
+			
+			DownloadManager dlm = new DownloadManager();
+			Bus.Session.Register(OBJECT_SERVICE, new ObjectPath(DOWNLOADMANAGER_OBJECT_PATH), dlm);
 			
 			RequestNameReply reply = Bus.Session.RequestName(OBJECT_SERVICE);
 			Console.WriteLine("RequestName: "+reply);

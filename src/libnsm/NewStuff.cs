@@ -7,6 +7,7 @@ using System.Xml;
 using System.Xml.Serialization;
 using System.Threading;
 using NDesk.DBus;
+using Nsm.Downloaders;
 
 namespace Nsm
 {	
@@ -208,13 +209,13 @@ namespace Nsm
 		        return;
 			Console.WriteLine("*** Updating {0}", plugin_id);            
             
-            DownloadItem dlclient = new DownloadItem(this.Repo[plugin_id].Url, this.Options["install-path"], this.Repo[plugin_id].Signature, this.Repo[plugin_id].Checksum);
+            AbstractDownloader dl = DownloadClient.GetDownloader(this.Repo[plugin_id].Url, this.Options["install-path"], this.Repo[plugin_id].Signature, this.Repo[plugin_id].Checksum);
 			
-			dlclient.Downloader.Status += new Nsm.Downloaders.StatusHandler(
+			dl.Status += new StatusHandler(
 			 delegate(string action, double progress) { InvokeSignal(SignalType.DownloadStatus, action, progress); }
 			);
 			
-			DownloaderDel dlDel = new DownloaderDel(dlclient.Downloader.Run);
+			DownloaderDel dlDel = new DownloaderDel(dl.Run);
             AsyncCallback dlCallback = new AsyncCallback(DownloaderFinishedCallback);
             dlDel.BeginInvoke(dlCallback, plugin_id);
 		}

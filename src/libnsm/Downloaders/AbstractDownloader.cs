@@ -9,7 +9,7 @@ namespace Nsm.Downloaders
 	
 	internal delegate void StatusHandler(string action, double progress);
     
-    /// <summary>Downloads a file</summary>
+    /// <summary>Abstract base class to download a file</summary>
 	internal abstract class AbstractDownloader : IDisposable
 	{
         protected const int BUFFER_SIZE = 2048;
