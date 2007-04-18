@@ -8,14 +8,12 @@ dbus_sources = \
     Introspection.cs \
     Signature.cs \
     AssemblyInfo.cs  \
-    IntrospectionSchema.cs  \
     SocketTransport.cs \
     Authentication.cs  \
     Mapper.cs \
     Transport.cs \
     Bus.cs \
     Message.cs \
-    UnixMonoTransport.cs \
     BusObject.cs \
     MessageFilter.cs \
     UnixNativeTransport.cs \
