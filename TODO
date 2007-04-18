@@ -2,3 +2,4 @@
 * i18n the XML file
 * bittorrent integration
 * show exact progress while extracting
+* better error handling on download error (404 etc.)
