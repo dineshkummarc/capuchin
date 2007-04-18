@@ -1,5 +1,12 @@
 2007-04-18  Sebastian Pölsterl  <marduk@k-d-w.org>
 
+	* dbus-sharp
+	* configure.ac:
+	Set required dbus-sharp version to 0.5.2,
+	because previous releases aren't thread-safe
+
+2007-04-18  Sebastian Pölsterl  <marduk@k-d-w.org>
+
 	* examples/DBusTester.py
 	* examples/testapp.cs
 	* examples/testapp.py:

@@ -13,13 +13,13 @@ namespace NDesk.DBus
 	using Authentication;
 	using Transports;
 
-	public class Connection
+	public partial class Connection
 	{
 		//TODO: reconsider this field
-		protected Stream ns = null;
+		Stream ns = null;
 
-		protected Transport transport;
-		public Transport Transport {
+		Transport transport;
+		internal Transport Transport {
 			get {
 				return transport;
 			} set {
@@ -29,7 +29,7 @@ namespace NDesk.DBus
 
 		protected Connection () {}
 
-		public Connection (Transport transport)
+		internal Connection (Transport transport)
 		{
 			this.transport = transport;
 			transport.Connection = this;
@@ -38,19 +38,22 @@ namespace NDesk.DBus
 			ns = transport.Stream;
 		}
 
-		public Connection (string address)
+		//should this be public?
+		internal Connection (string address)
 		{
 			OpenPrivate (address);
 			Authenticate ();
 		}
 
-		protected bool isConnected = false;
+		/*
+		bool isConnected = false;
 		public bool IsConnected
 		{
 			get {
 				return isConnected;
 			}
 		}
+		*/
 
 		//should we do connection sharing here?
 		public static Connection Open (string address)
@@ -62,9 +65,7 @@ namespace NDesk.DBus
 			return conn;
 		}
 
-		//TODO: reduce visibility when test-server no longer needs this
-		//protected void OpenPrivate (string address)
-		public void OpenPrivate (string address)
+		internal void OpenPrivate (string address)
 		{
 			if (address == null)
 				throw new ArgumentNullException ("address");
@@ -82,7 +83,7 @@ namespace NDesk.DBus
 			ns = transport.Stream;
 		}
 
-		public void Authenticate ()
+		void Authenticate ()
 		{
 			if (transport != null)
 				transport.WriteCred ();
@@ -92,8 +93,8 @@ namespace NDesk.DBus
 			isAuthenticated = true;
 		}
 
-		protected bool isAuthenticated = false;
-		public bool IsAuthenticated
+		bool isAuthenticated = false;
+		internal bool IsAuthenticated
 		{
 			get {
 				return isAuthenticated;
@@ -101,42 +102,36 @@ namespace NDesk.DBus
 		}
 
 		//Interlocked.Increment() handles the overflow condition for uint correctly, so it's ok to store the value as an int but cast it to uint
-		protected int serial = 0;
-		protected uint GenerateSerial ()
+		int serial = 0;
+		uint GenerateSerial ()
 		{
 			//return ++serial;
 			return (uint)Interlocked.Increment (ref serial);
 		}
 
-		public Message SendWithReplyAndBlock (Message msg)
+		internal Message SendWithReplyAndBlock (Message msg)
 		{
-			uint id = SendWithReply (msg);
-
-			Message retMsg;
-
-			//TODO: this isn't fully thread-safe but works much of the time
-			while (!replies.TryGetValue (id, out retMsg))
-				HandleMessage (ReadMessage ());
-
-			replies.Remove (id);
-
-			//FIXME: we should dispatch signals and calls on the main thread
-			DispatchSignals ();
-
-			return retMsg;
+			PendingCall pending = SendWithReply (msg);
+			return pending.Reply;
 		}
 
-		public uint SendWithReply (Message msg)
+		internal PendingCall SendWithReply (Message msg)
 		{
 			msg.ReplyExpected = true;
-			return Send (msg);
-		}
-
-		public uint Send (Message msg)
-		{
 			msg.Header.Serial = GenerateSerial ();
 
-			msg.WriteHeader ();
+			//TODO: throttle the maximum number of concurrent PendingCalls
+			PendingCall pending = new PendingCall (this);
+			pendingCalls[msg.Header.Serial] = pending;
+
+			WriteMessage (msg);
+
+			return pending;
+		}
+
+		internal uint Send (Message msg)
+		{
+			msg.Header.Serial = GenerateSerial ();
 
 			WriteMessage (msg);
 
@@ -147,16 +142,25 @@ namespace NDesk.DBus
 			return msg.Header.Serial;
 		}
 
-		protected void WriteMessage (Message msg)
+		object writeLock = new object ();
+		internal void WriteMessage (Message msg)
 		{
-			ns.Write (msg.HeaderData, 0, msg.HeaderData.Length);
-			if (msg.Body != null && msg.Body.Length != 0)
-				ns.Write (msg.Body, 0, msg.Body.Length);
+			byte[] HeaderData = msg.GetHeaderData ();
+
+			long msgLength = HeaderData.Length + (msg.Body != null ? msg.Body.Length : 0);
+			if (msgLength > Protocol.MaxMessageLength)
+				throw new Exception ("Message length " + msgLength + " exceeds maximum allowed " + Protocol.MaxMessageLength + " bytes");
+
+			lock (writeLock) {
+				ns.Write (HeaderData, 0, HeaderData.Length);
+				if (msg.Body != null && msg.Body.Length != 0)
+					ns.Write (msg.Body, 0, msg.Body.Length);
+			}
 		}
 
-		protected Queue<Message> Inbound = new Queue<Message> ();
+		Queue<Message> Inbound = new Queue<Message> ();
 		/*
-		protected Queue<Message> Outbound = new Queue<Message> ();
+		Queue<Message> Outbound = new Queue<Message> ();
 
 		public void Flush ()
 		{
@@ -200,37 +204,34 @@ namespace NDesk.DBus
 		}
 		*/
 
-		public Message ReadMessage ()
+		internal Message ReadMessage ()
 		{
-			//FIXME: fix reading algorithm to work in one step
-			//this code is a bit silly and inefficient
-			//hopefully it's at least correct and avoids polls for now
+			byte[] header;
+			byte[] body = null;
 
 			int read;
 
-			byte[] buf = new byte[16];
-			read = ns.Read (buf, 0, 16);
+			//16 bytes is the size of the fixed part of the header
+			byte[] hbuf = new byte[16];
+			read = ns.Read (hbuf, 0, 16);
+
+			if (read == 0)
+				return null;
 
 			if (read != 16)
 				throw new Exception ("Header read length mismatch: " + read + " of expected " + "16");
 
-			MemoryStream ms = new MemoryStream ();
-
-			ms.Write (buf, 0, 16);
-
-			EndianFlag endianness = (EndianFlag)buf[0];
-			MessageReader reader = new MessageReader (endianness, buf);
+			EndianFlag endianness = (EndianFlag)hbuf[0];
+			MessageReader reader = new MessageReader (endianness, hbuf);
 
 			//discard the endian byte as we've already read it
-			byte tmp;
-			reader.GetValue (out tmp);
+			reader.ReadByte ();
 
 			//discard message type and flags, which we don't care about here
-			reader.GetValue (out tmp);
-			reader.GetValue (out tmp);
+			reader.ReadByte ();
+			reader.ReadByte ();
 
-			byte version;
-			reader.GetValue (out version);
+			byte version = reader.ReadByte ();
 
 			if (version < Protocol.MinVersion || version > Protocol.MaxVersion)
 				throw new NotSupportedException ("Protocol version '" + version.ToString () + "' is not supported");
@@ -239,58 +240,54 @@ namespace NDesk.DBus
 				if (version != Protocol.Version)
 					Console.Error.WriteLine ("Warning: Protocol version '" + version.ToString () + "' is not explicitly supported but may be compatible");
 
-			uint bodyLength, serial, headerLength;
-			reader.GetValue (out bodyLength);
-			reader.GetValue (out serial);
-			reader.GetValue (out headerLength);
+			uint bodyLength = reader.ReadUInt32 ();
+			//discard serial
+			reader.ReadUInt32 ();
+			uint headerLength = reader.ReadUInt32 ();
 
-			//TODO: remove this limitation
+			//this check may become relevant if a future version of the protocol allows larger messages
+			/*
 			if (bodyLength > Int32.MaxValue || headerLength > Int32.MaxValue)
 				throw new NotImplementedException ("Long messages are not yet supported");
+			*/
 
 			int bodyLen = (int)bodyLength;
 			int toRead = (int)headerLength;
 
-			toRead = Protocol.Padded ((int)toRead, 8);
+			//we fixup to include the padding following the header
+			toRead = Protocol.Padded (toRead, 8);
 
-			buf = new byte[toRead];
+			long msgLength = toRead + bodyLen;
+			if (msgLength > Protocol.MaxMessageLength)
+				throw new Exception ("Message length " + msgLength + " exceeds maximum allowed " + Protocol.MaxMessageLength + " bytes");
 
-			read = ns.Read (buf, 0, toRead);
+			header = new byte[16 + toRead];
+			Array.Copy (hbuf, header, 16);
+
+			read = ns.Read (header, 16, toRead);
 
 			if (read != toRead)
-				throw new Exception ("Read length mismatch: " + read + " of expected " + toRead);
-
-			ms.Write (buf, 0, buf.Length);
-
-			Message msg = new Message ();
-			msg.Connection = this;
-			msg.HeaderData = ms.ToArray ();
+				throw new Exception ("Message header length mismatch: " + read + " of expected " + toRead);
 
 			//read the body
 			if (bodyLen != 0) {
-				//FIXME
-				//msg.Body = new byte[(int)msg.Header->Length];
-				byte[] body = new byte[bodyLen];
+				body = new byte[bodyLen];
+				read = ns.Read (body, 0, bodyLen);
 
-				//int len = ns.Read (msg.Body, 0, msg.Body.Length);
-				int len = ns.Read (body, 0, bodyLen);
-
-				//if (len != msg.Body.Length)
-				if (len != bodyLen)
-					throw new Exception ("Message body size mismatch");
-
-				//msg.Body = new MemoryStream (body);
-				msg.Body = body;
+				if (read != bodyLen)
+					throw new Exception ("Message body length mismatch: " + read + " of expected " + bodyLen);
 			}
 
-			//this needn't be done here
-			msg.ParseHeader ();
+			Message msg = new Message ();
+			msg.Connection = this;
+			msg.Body = body;
+			msg.SetHeaderData (header);
 
 			return msg;
 		}
 
 		//temporary hack
-		protected void DispatchSignals ()
+		internal void DispatchSignals ()
 		{
 			lock (Inbound) {
 				while (Inbound.Count != 0) {
@@ -300,22 +297,42 @@ namespace NDesk.DBus
 			}
 		}
 
+		internal Thread mainThread = Thread.CurrentThread;
+
 		//temporary hack
 		public void Iterate ()
 		{
+			mainThread = Thread.CurrentThread;
+
 			//Message msg = Inbound.Dequeue ();
 			Message msg = ReadMessage ();
 			HandleMessage (msg);
 			DispatchSignals ();
 		}
 
-		protected void HandleMessage (Message msg)
+		internal void HandleMessage (Message msg)
 		{
+			//TODO: support disconnection situations properly and move this check elsewhere
+			if (msg == null)
+				throw new ArgumentNullException ("msg", "Cannot handle a null message; maybe the bus was disconnected");
+
 			{
-				//TODO: don't store replies unless they are expected (right now all replies are expected as we don't support NoReplyExpected)
-				object reply_serial;
-				if (msg.Header.Fields.TryGetValue (FieldCode.ReplySerial, out reply_serial)) {
-					replies[(uint)reply_serial] = msg;
+				object field_value;
+				if (msg.Header.Fields.TryGetValue (FieldCode.ReplySerial, out field_value)) {
+					uint reply_serial = (uint)field_value;
+					PendingCall pending;
+
+					if (pendingCalls.TryGetValue (reply_serial, out pending)) {
+						if (pendingCalls.Remove (reply_serial))
+							pending.Reply = msg;
+
+						return;
+					}
+
+					//we discard reply messages with no corresponding PendingCall
+					if (Protocol.Verbose)
+						Console.Error.WriteLine ("Unexpected reply message received: MessageType='" + msg.Header.MessageType + "', ReplySerial=" + reply_serial);
+
 					return;
 				}
 			}
@@ -336,7 +353,7 @@ namespace NDesk.DBus
 					string errMsg = String.Empty;
 					if (msg.Signature.Value.StartsWith ("s")) {
 						MessageReader reader = new MessageReader (msg);
-						reader.GetValue (out errMsg);
+						errMsg = reader.ReadString ();
 					}
 					//throw new Exception ("Remote Error: Signature='" + msg.Signature.Value + "' " + error.ErrorName + ": " + errMsg);
 					//if (Protocol.Verbose)
@@ -348,17 +365,22 @@ namespace NDesk.DBus
 			}
 		}
 
-		protected Dictionary<uint,Message> replies = new Dictionary<uint,Message> ();
+		Dictionary<uint,PendingCall> pendingCalls = new Dictionary<uint,PendingCall> ();
 
 		//this might need reworking with MulticastDelegate
-		protected void HandleSignal (Message msg)
+		internal void HandleSignal (Message msg)
 		{
 			Signal signal = new Signal (msg);
 
-			string matchRule = MessageFilter.CreateMatchRule (MessageType.Signal, signal.Path, signal.Interface, signal.Member);
+			//TODO: this is a hack, not necessary when MatchRule is complete
+			MatchRule rule = new MatchRule ();
+			rule.MessageType = MessageType.Signal;
+			rule.Interface = signal.Interface;
+			rule.Member = signal.Member;
+			rule.Path = signal.Path;
 
-			if (Handlers.ContainsKey (matchRule)) {
-				Delegate dlg = Handlers[matchRule];
+			Delegate dlg;
+			if (Handlers.TryGetValue (rule, out dlg)) {
 				//dlg.DynamicInvoke (GetDynamicValues (msg));
 
 				MethodInfo mi = dlg.Method;
@@ -372,43 +394,22 @@ namespace NDesk.DBus
 			}
 		}
 
-		public Dictionary<string,Delegate> Handlers = new Dictionary<string,Delegate> ();
+		internal Dictionary<MatchRule,Delegate> Handlers = new Dictionary<MatchRule,Delegate> ();
 
 		//very messy
-		void MaybeSendUnknownMethodError (MethodCall method_call)
+		internal void MaybeSendUnknownMethodError (MethodCall method_call)
 		{
-			string errMsg = String.Format ("Method \"{0}\" with signature \"{1}\" on interface \"{2}\" doesn't exist", method_call.Member, method_call.Signature.Value, method_call.Interface);
-
-			if (!method_call.message.ReplyExpected) {
-				if (!Protocol.Verbose)
-					return;
-
-				Console.Error.WriteLine ();
-				Console.Error.WriteLine ("Warning: Not sending Error message (" + errMsg + ") as reply because no reply was expected");
-				Console.Error.WriteLine ();
-				return;
-			}
-
-			Error error = new Error ("org.freedesktop.DBus.Error.UnknownMethod", method_call.message.Header.Serial);
-			error.message.Signature = new Signature (DType.String);
-
-			MessageWriter writer = new MessageWriter (Connection.NativeEndianness);
-			writer.connection = this;
-			writer.Write (errMsg);
-			error.message.Body = writer.ToArray ();
-
-			//TODO: we should be more strict here, but this fallback was added as a quick fix for p2p
-			if (method_call.Sender != null)
-				error.message.Header.Fields[FieldCode.Destination] = method_call.Sender;
-
-			Send (error.message);
+			Message msg = MessageHelper.CreateUnknownMethodError (method_call);
+			if (msg != null)
+				Send (msg);
 		}
 
 		//not particularly efficient and needs to be generalized
-		protected void HandleMethodCall (MethodCall method_call)
+		internal void HandleMethodCall (MethodCall method_call)
 		{
 			//TODO: Ping and Introspect need to be abstracted and moved somewhere more appropriate once message filter infrastructure is complete
 
+			//FIXME: these special cases are slightly broken for the case where the member but not the interface is specified in the message
 			if (method_call.Interface == "org.freedesktop.DBus.Peer" && method_call.Member == "Ping") {
 				object[] pingRet = new object[0];
 				Message reply = MessageHelper.ConstructReplyFor (method_call, pingRet);
@@ -427,9 +428,10 @@ namespace NDesk.DBus
 				int depth = method_call.Path.Decomposed.Length;
 				foreach (ObjectPath pth in RegisteredObjects.Keys) {
 					if (pth.Value == (method_call.Path.Value)) {
-						intro.WriteType (RegisteredObjects[pth].GetType ());
+						ExportObject exo = (ExportObject)RegisteredObjects[pth];
+						intro.WriteType (exo.obj.GetType ());
 					} else {
-						for (ObjectPath cur = pth ; cur.Value != null ; cur = cur.Parent) {
+						for (ObjectPath cur = pth ; cur != null ; cur = cur.Parent) {
 							if (cur.Value == method_call.Path.Value) {
 								string linkNode = pth.Decomposed[depth];
 								if (!linkNodes.Contains (linkNode)) {
@@ -450,104 +452,38 @@ namespace NDesk.DBus
 				return;
 			}
 
-			if (!RegisteredObjects.ContainsKey (method_call.Path)) {
+			BusObject bo;
+			if (RegisteredObjects.TryGetValue (method_call.Path, out bo)) {
+				ExportObject eo = (ExportObject)bo;
+				eo.HandleMethodCall (method_call);
+			} else {
 				MaybeSendUnknownMethodError (method_call);
-				return;
-			}
-
-			object obj = RegisteredObjects[method_call.Path];
-			Type type = obj.GetType ();
-			//object retObj = type.InvokeMember (msg.Member, BindingFlags.InvokeMethod, null, obj, MessageHelper.GetDynamicValues (msg));
-
-			//TODO: there is no member name mapping for properties etc. yet
-
-			//FIXME: breaks for overloaded methods and ignores Interface
-			MethodInfo mi = type.GetMethod (method_call.Member, BindingFlags.Public | BindingFlags.Instance);
-
-			if (mi == null) {
-				MaybeSendUnknownMethodError (method_call);
-				return;
-			}
-
-			//FIXME: such a simple approach won't work unfortunately
-			//if (!Mapper.IsPublic (mi))
-			//	throw new Exception ("The resolved method is not marked as being public on this bus");
-
-			object retObj = null;
-			try {
-				object[] inArgs = MessageHelper.GetDynamicValues (method_call.message, mi.GetParameters ());
-				retObj = mi.Invoke (obj, inArgs);
-			} catch (TargetInvocationException e) {
-				Exception ie = e.InnerException;
-				//TODO: complete exception sending support
-
-				if (!method_call.message.ReplyExpected) {
-					if (!Protocol.Verbose)
-						return;
-
-					Console.Error.WriteLine ();
-					Console.Error.WriteLine ("Warning: Not sending Error message (" + ie.GetType ().Name + ") as reply because no reply was expected by call to '" + (method_call.Interface + "." + method_call.Member) + "'");
-					Console.Error.WriteLine ();
-					return;
-				}
-
-				Error error = new Error (Mapper.GetInterfaceName (ie.GetType ()), method_call.message.Header.Serial);
-				error.message.Signature = new Signature (DType.String);
-
-				MessageWriter writer = new MessageWriter (Connection.NativeEndianness);
-				writer.connection = this;
-				writer.Write (ie.Message);
-				error.message.Body = writer.ToArray ();
-
-				//TODO: we should be more strict here, but this fallback was added as a quick fix for p2p
-				if (method_call.Sender != null)
-					error.message.Header.Fields[FieldCode.Destination] = method_call.Sender;
-
-				Send (error.message);
-				return;
-			}
-
-			if (method_call.message.ReplyExpected) {
-				/*
-				object[] retObjs;
-
-				if (retObj == null) {
-					retObjs = new object[0];
-				} else {
-					retObjs = new object[1];
-					retObjs[0] = retObj;
-				}
-
-				Message reply = ConstructReplyFor (method_call, retObjs);
-				*/
-				Message reply = MessageHelper.ConstructReplyFor (method_call, mi.ReturnType, retObj);
-				Send (reply);
 			}
 		}
 
-		protected Dictionary<ObjectPath,object> RegisteredObjects = new Dictionary<ObjectPath,object> ();
+		Dictionary<ObjectPath,BusObject> RegisteredObjects = new Dictionary<ObjectPath,BusObject> ();
 
 		//FIXME: this shouldn't be part of the core API
 		//that also applies to much of the other object mapping code
-		//it should cache proxies and objects, really
 
-		//inspired by System.Activator
 		public object GetObject (Type type, string bus_name, ObjectPath path)
 		{
-			BusObject busObject = new BusObject (this, bus_name, path);
-			DProxy prox = new DProxy (busObject, type);
+			//if (type == null)
+			//	return GetObject (bus_name, path);
 
-			object obj = prox.GetTransparentProxy ();
+			//if the requested type is an interface, we can implement it efficiently
+			//otherwise we fall back to using a transparent proxy
+			if (type.IsInterface) {
+				return BusObject.GetObject (this, bus_name, path, type);
+			} else {
+				if (Protocol.Verbose)
+					Console.Error.WriteLine ("Warning: Note that MarshalByRefObject use is not recommended; for best performance, define interfaces");
 
-			return obj;
+				BusObject busObject = new BusObject (this, bus_name, path);
+				DProxy prox = new DProxy (busObject, type);
+				return prox.GetTransparentProxy ();
+			}
 		}
-
-		/*
-		public object GetObject (Type type, string bus_name, ObjectPath path)
-		{
-			return BusObject.GetObject (this, bus_name, path, type);
-		}
-		*/
 
 		public T GetObject<T> (string bus_name, ObjectPath path)
 		{
@@ -556,44 +492,36 @@ namespace NDesk.DBus
 
 		public void Register (string bus_name, ObjectPath path, object obj)
 		{
-			Type type = obj.GetType ();
+			ExportObject eo = new ExportObject (this, bus_name, path, obj);
+			eo.Registered = true;
 
-			BusObject busObject = new BusObject (this, bus_name, path);
-
-			foreach (EventInfo ei in type.GetEvents (BindingFlags.Public | BindingFlags.Instance)) {
-				//hook up only events that are public to the bus
-				if (!Mapper.IsPublic (ei))
-					continue;
-
-				Delegate dlg = busObject.GetHookupDelegate (ei);
-				ei.AddEventHandler (obj, dlg);
-			}
-
-			//FIXME: implement some kind of tree data structure or internal object hierarchy. right now we are ignoring the name and putting all object paths in one namespace, which is bad
-			RegisteredObjects[path] = obj;
+			//TODO: implement some kind of tree data structure or internal object hierarchy. right now we are ignoring the name and putting all object paths in one namespace, which is bad
+			RegisteredObjects[path] = eo;
 		}
 
 		public object Unregister (string bus_name, ObjectPath path)
 		{
 			//TODO: make use of bus_name
 
-			if (!RegisteredObjects.ContainsKey (path))
+			BusObject bo;
+
+			if (!RegisteredObjects.TryGetValue (path, out bo))
 				throw new Exception ("Cannot unregister " + path + " as it isn't registered");
-			object obj = RegisteredObjects[path];
 
 			RegisteredObjects.Remove (path);
 
-			//FIXME: complete unregistering including the handlers we added etc.
+			ExportObject eo = (ExportObject)bo;
+			eo.Registered = false;
 
-			return obj;
+			return eo.obj;
 		}
 
 		//these look out of place, but are useful
-		public virtual void AddMatch (string rule)
+		internal protected virtual void AddMatch (string rule)
 		{
 		}
 
-		public virtual void RemoveMatch (string rule)
+		internal protected virtual void RemoveMatch (string rule)
 		{
 		}
 
@@ -605,6 +533,6 @@ namespace NDesk.DBus
 				NativeEndianness = EndianFlag.Big;
 		}
 
-		public static readonly EndianFlag NativeEndianness;
+		internal static readonly EndianFlag NativeEndianness;
 	}
 }

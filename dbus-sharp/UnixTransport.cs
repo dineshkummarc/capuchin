@@ -8,7 +8,7 @@ using Mono.Unix;
 
 namespace NDesk.DBus.Transports
 {
-	public abstract class UnixTransport : Transport
+	abstract class UnixTransport : Transport
 	{
 		public override void Open (AddressEntry entry)
 		{
@@ -24,7 +24,7 @@ namespace NDesk.DBus.Transports
 
 			Open (path, abstr);
 		}
-	
+
 		public override string AuthString ()
 		{
 			long uid = UnixUserInfo.GetRealUserId ();

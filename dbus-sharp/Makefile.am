@@ -5,28 +5,30 @@ EXTRA_DIST = $(dbus_sources)
 
 dbus_sources = \
     Address.cs \
-    Introspection.cs \
-    Signature.cs \
-    AssemblyInfo.cs  \
-    SocketTransport.cs \
-    Authentication.cs  \
-    Mapper.cs \
-    Transport.cs \
+    AssemblyInfo.cs \
     Bus.cs \
-    Message.cs \
     BusObject.cs \
-    MessageFilter.cs \
-    UnixNativeTransport.cs \
     Connection.cs \
-    MessageReader.cs \
-    UnixTransport.cs \
-    DBus.cs \
-    MessageWriter.cs \
-    Wrapper.cs \
-    DProxy.cs \
-    Protocol.cs \
     ExportObject.cs \
-    Server.cs
+    Authentication.cs \
+    Protocol.cs \
+    Mapper.cs \
+    MatchRule.cs \
+    Message.cs \
+    MessageFilter.cs \
+    MessageReader.cs \
+    MessageWriter.cs \
+    PendingCall.cs \
+    SocketTransport.cs \
+    Transport.cs \
+    TypeImplementer.cs \
+    Wrapper.cs \
+    UnixTransport.cs \
+    UnixNativeTransport.cs \
+    DBus.cs \
+    Introspection.cs \
+    DProxy.cs \
+    Signature.cs
 
 REFERENCES = \
     -r:Mono.Posix

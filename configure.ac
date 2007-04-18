@@ -54,7 +54,7 @@ dnl ****************************************************************************
 AC_ARG_ENABLE([internal-dbus], AS_HELP_STRING([--enable-internal-dbus], [Use internal ndesk-dbus library (default: auto)]),
 enable_internal_ndeskdbus=$enableval, enable_internal_ndeskdbus=auto)
 
-NDESKDBUS_REQUIRED_VERSION=0.4.0
+NDESKDBUS_REQUIRED_VERSION=0.5.2
 PKG_CHECK_MODULES(NDESKDBUS, ndesk-dbus-1.0 >= $NDESKDBUS_REQUIRED_VERSION, has_ndeskdbus=yes, has_ndeskdbus=no)
 
 if test "x$has_ndeskdbus" = "xno"; then

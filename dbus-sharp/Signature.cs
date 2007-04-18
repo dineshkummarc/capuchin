@@ -12,7 +12,7 @@ using System.Reflection;
 namespace NDesk.DBus
 {
 	//maybe this should be nullable?
-	public struct Signature
+	struct Signature
 	{
 		//TODO: this class needs some work
 		//Data should probably include the null terminator
@@ -79,7 +79,7 @@ namespace NDesk.DBus
 
 		public static Signature Copy (Signature sig)
 		{
-			return new Signature (sig.Value);
+			return new Signature (sig.data);
 		}
 
 		public Signature (string value)
@@ -89,20 +89,16 @@ namespace NDesk.DBus
 
 		public Signature (byte[] value)
 		{
-			this.data = new byte[value.Length];
-
-			for (int i = 0 ; i != value.Length ; i++)
-				this.data[i] = value[i];
+			this.data = (byte[])value.Clone ();
 		}
 
 		//this will become obsolete soon
-		public Signature (DType value)
+		internal Signature (DType value)
 		{
-			this.data = new byte[1];
-			this.data[0] = (byte)value;
+			this.data = new byte[] {(byte)value};
 		}
 
-		public Signature (DType[] value)
+		internal Signature (DType[] value)
 		{
 			this.data = new byte[value.Length];
 
@@ -126,7 +122,7 @@ namespace NDesk.DBus
 			return data;
 		}
 
-		public DType this[int index]
+		internal DType this[int index]
 		{
 			get {
 				return (DType)data[index];
@@ -284,11 +280,11 @@ namespace NDesk.DBus
 			int pos = 0;
 			Type ret = ToType (ref pos);
 			if (pos != data.Length)
-				throw new Exception ("Sig parse error: at " + pos + " but should be at " + data.Length);
+				throw new Exception ("Signature '" + Value + "' is not a single complete type");
 			return ret;
 		}
 
-		public static DType TypeCodeToDType (TypeCode typeCode)
+		internal static DType TypeCodeToDType (TypeCode typeCode)
 		{
 			switch (typeCode)
 			{
@@ -334,7 +330,7 @@ namespace NDesk.DBus
 		}
 
 		//FIXME: this method is bad, get rid of it
-		public static DType TypeToDType (Type type)
+		internal static DType TypeToDType (Type type)
 		{
 			if (type == typeof (void))
 				return DType.Invalid;
@@ -355,7 +351,7 @@ namespace NDesk.DBus
 				return TypeCodeToDType (Type.GetTypeCode (type));
 
 			if (type.IsEnum)
-				return TypeToDType (type.GetElementType ());
+				return TypeToDType (Enum.GetUnderlyingType (type));
 
 			//needs work
 			if (type.IsArray)
@@ -394,7 +390,7 @@ namespace NDesk.DBus
 				return DType.Int64;
 			else if (type == typeof (ulong))
 				return DType.UInt64;
-			else if (type == typeof (float)) //FIXME: this isn't supported by DBus yet
+			else if (type == typeof (float)) //not supported by libdbus at time of writing
 				return DType.Single;
 			else if (type == typeof (double))
 				return DType.Double;
@@ -432,7 +428,7 @@ namespace NDesk.DBus
 					return typeof (long);
 				case DType.UInt64:
 					return typeof (ulong);
-				case DType.Single: //Not yet supported!
+				case DType.Single: ////not supported by libdbus at time of writing
 					return typeof (float);
 				case DType.Double:
 					return typeof (double);
@@ -451,7 +447,9 @@ namespace NDesk.DBus
 						Type valueType = ToType (ref pos);
 						//skip over the }
 						pos++;
-						return typeof (IDictionary<,>).MakeGenericType (new Type[] {keyType, valueType});
+						//return typeof (IDictionary<,>).MakeGenericType (new Type[] {keyType, valueType});
+						//workaround for Mono bug #81035 (memory leak)
+						return Mapper.GetGenericType (typeof (IDictionary<,>), new Type[] {keyType, valueType});
 					} else {
 						return ToType (ref pos).MakeArrayType ();
 					}
@@ -532,13 +530,13 @@ namespace NDesk.DBus
 		}
 	}
 
-	public enum ArgDirection
+	enum ArgDirection
 	{
 		In,
 		Out,
 	}
 
-	public enum DType : byte
+	enum DType : byte
 	{
 		Invalid = (byte)'\0',
 

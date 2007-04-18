@@ -12,7 +12,7 @@ using System.Reflection;
 namespace NDesk.DBus
 {
 	//TODO: complete this class
-	public class Introspector
+	class Introspector
 	{
 		const string NAMESPACE = "http://www.freedesktop.org/standards/dbus";
 		const string PUBLIC_IDENTIFIER = "-//freedesktop//DTD D-BUS Object Introspection 1.0//EN";
@@ -42,6 +42,7 @@ namespace NDesk.DBus
 
 			AssemblyName aname = Assembly.GetExecutingAssembly().GetName ();
 			writer.WriteComment (" " + aname.Name + " " + aname.Version.ToString (3) + " ");
+			writer.WriteComment (" hax ");
 
 			//the root node element
 			writer.WriteStartElement ("node");

@@ -2,16 +2,13 @@
 // This software is made available under the MIT License
 // See COPYING for details
 
-//defined by default, since this is not a controversial extension
-#define PROTO_TYPE_SINGLE
-
 using System;
 using System.Collections.Generic;
 
 namespace NDesk.DBus
 {
 	//yyyyuua{yv}
-	public struct Header
+	struct Header
 	{
 		public EndianFlag Endianness;
 		public MessageType MessageType;
@@ -79,7 +76,7 @@ namespace NDesk.DBus
 	}
 	*/
 
-	public enum MessageType : byte
+	enum MessageType : byte
 	{
 		//This is an invalid type.
 		Invalid,
@@ -93,7 +90,7 @@ namespace NDesk.DBus
 		Signal,
 	}
 
-	public enum FieldCode : byte
+	enum FieldCode : byte
 	{
 		Invalid,
 			Path,
@@ -109,29 +106,47 @@ namespace NDesk.DBus
 #endif
 	}
 
-	public enum EndianFlag : byte
+	enum EndianFlag : byte
 	{
 		Little = (byte)'l',
 		Big = (byte)'B',
 	}
 
 	[Flags]
-	public enum HeaderFlag : byte
+	enum HeaderFlag : byte
 	{
 		None = 0,
 		NoReplyExpected = 0x1,
 		NoAutoStart = 0x2,
 	}
 
-	public struct ObjectPath //: IComparable, IComparable<ObjectPath>, IEquatable<ObjectPath>
+	public sealed class ObjectPath //: IComparable, IComparable<ObjectPath>, IEquatable<ObjectPath>
 	{
 		public static readonly ObjectPath Root = new ObjectPath ("/");
 
-		public readonly string Value;
+		internal readonly string Value;
 
 		public ObjectPath (string value)
 		{
+			if (value == null)
+				throw new ArgumentNullException ("value");
+
 			this.Value = value;
+		}
+
+		public override bool Equals (object o)
+		{
+			ObjectPath b = o as ObjectPath;
+
+			if (b == null)
+				return false;
+
+			return Value.Equals (b.Value);
+		}
+
+		public override int GetHashCode ()
+		{
+			return Value.GetHashCode ();
 		}
 
 		public override string ToString ()
@@ -140,7 +155,7 @@ namespace NDesk.DBus
 		}
 
 		//this may or may not prove useful
-		public string[] Decomposed
+		internal string[] Decomposed
 		{
 			get {
 				return Value.Split (new char[] {'/'}, StringSplitOptions.RemoveEmptyEntries);
@@ -151,11 +166,11 @@ namespace NDesk.DBus
 			}
 		}
 
-		public ObjectPath Parent
+		internal ObjectPath Parent
 		{
 			get {
 				if (Value == Root.Value)
-					return new ObjectPath (null);
+					return null;
 
 				string par = Value.Substring (0, Value.LastIndexOf ('/'));
 				if (par == String.Empty)
@@ -183,12 +198,21 @@ namespace NDesk.DBus
 		*/
 	}
 
-	public static class Protocol
+	static class Protocol
 	{
 		//protocol versions that we support
 		public const byte MinVersion = 0;
 		public const byte Version = 1;
 		public const byte MaxVersion = Version;
+
+		public const uint MaxMessageLength = 134217728; //2 to the 27th power
+		public const uint MaxArrayLength = 67108864; //2 to the 26th power
+		public const uint MaxSignatureLength = 255;
+		public const uint MaxArrayDepth = 32;
+		public const uint MaxStructDepth = 32;
+
+		//this is not strictly related to Protocol since names are passed around as strings
+		internal const uint MaxNameLength = 255;
 
 		public static int PadNeeded (int pos, int alignment)
 		{
@@ -223,7 +247,7 @@ namespace NDesk.DBus
 				case DType.Int64:
 				case DType.UInt64:
 					return 8;
-#if PROTO_TYPE_SINGLE
+#if !DISABLE_SINGLE
 				case DType.Single: //Not yet supported!
 					return 4;
 #endif
