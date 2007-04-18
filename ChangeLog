@@ -1,3 +1,10 @@
+2007-04-18  Sebastian Pölsterl  <marduk@k-d-w.org>
+
+	* examples/DBusTester.py
+	* examples/testapp.cs
+	* examples/testapp.py:
+	Added examples from the tutorial.
+
 2007-04-15  Sebastian Pölsterl  <marduk@k-d-w.org>
 
 	* src/libnsm/Downloaders/HttpDownloader.cs
