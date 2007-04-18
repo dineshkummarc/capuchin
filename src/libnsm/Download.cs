@@ -7,12 +7,15 @@ namespace Nsm
 {
 	
 	/// <summary>A download as used by <see cref="Nsm.NewStuffManager" /></summary>	
-	internal struct Download
+	internal class Download
 	{
-		public string Url;
-		public string Destination;
-		public string LocalFile;
-		public Thread Downloader;
+		public readonly int Id;
+		public readonly string Url;
+		public readonly string Destination;
+		public readonly string LocalFile;		
+		public readonly string Signature;
+	    public readonly checksum Checksum;
+	    public Thread Downloader;
 		
 		/// <param name="url">URL of file to download</param>
 		/// <param name="dest">Directory where to save the file</param>
@@ -20,12 +23,20 @@ namespace Nsm
 		/// 	Thread that downloads the file.
 		///		In the Thread runs a <see cref="Nsm.Downloaders.AbstractDownloader" /> instance.
 		/// </param>
-		public Download(string url, string dest, Thread dlThread)
+		public Download(int id, string url, string dest, string sig, checksum checksumField, Thread dlThread)
 		{
+			this.Id = id;
 			this.Url = url;
 			this.Destination = dest;
-			this.Downloader = dlThread;
+			this.Signature = sig;
+			this.Checksum = checksumField;
 			this.LocalFile = Path.Combine( this.Destination, Path.GetFileName(this.Url) );
+			this.Downloader = dlThread;
+		}
+		
+		public Download(int id, string url, string dest, string sig, checksum checksumField) : this(id, url, dest, sig, checksumField, null)
+		{
+		
 		}
 			
 	}

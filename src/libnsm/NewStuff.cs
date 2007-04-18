@@ -7,6 +7,8 @@ using System.Xml;
 using System.Xml.Serialization;
 using System.Threading;
 using NDesk.DBus;
+using Nsm.Verification;
+using Nsm.Compression;
 
 namespace Nsm
 {	
@@ -91,6 +93,7 @@ namespace Nsm
 	    protected IDictionary<string, string> Options;
 	    protected IDictionary<int, string> DownloadToPluginId;
 	    
+		private const int SLEEP_TIME = 500;
 	    private bool disposed = false;
 	    
 	    /// <param name="application_name">Name of the application that object is related to</param>
@@ -109,7 +112,8 @@ namespace Nsm
 			// Used to map DownloadId to PluginID
 			this.DownloadToPluginId = new Dictionary<int, string>();
 			// Forward DownloadStatus event
-			Globals.DLM.DownloadStatus += new DownloadManager.DownloadStatusHandler( this.OnDownloadStatus );
+			Globals.DLM.DownloadStatus += new DownloadManager.DownloadStatusHandler( this.DownloadStatusCallback );
+			Globals.DLM.DownloadFinished += new DownloadManager.DownloadFinishedHandler( this.DownloadFinishedCallback );
 		}
 		
 		~NewStuff()
@@ -243,6 +247,56 @@ namespace Nsm
     		InvokeSignal(SignalType.Closed);
     	}
     	
+    	
+    	/// <summary>Check checksum and signature of the file</summary>
+    	/// <param name="local_file">Path to the downloaded file</param>
+    	/// <param name="signature">URL of the signature file</param>
+    	/// <param name="checksumField">Checksum information</param>
+    	protected void CheckFile(string local_file, string signature, checksum checksumField)
+    	{
+    		if (checksumField != null)
+            {
+                FileStream fs = new FileStream( local_file, FileMode.Open );
+                ChecksumVerifier cv = new ChecksumVerifier( fs, checksumField );
+                fs.Close();
+                
+                Console.WriteLine("*** Checksum valid: {0}", cv.IsValid);
+                if (!cv.IsValid)
+                {
+                    // Checksum is invalid
+                    File.Delete(local_file);
+                    return;
+                }
+            }
+            
+            if (signature != null)
+            {
+                GnuPGVerifier gv = new GnuPGVerifier(local_file, signature);
+                
+                Console.WriteLine("*** Signature valid: {0}", gv.IsValid);
+                if (!gv.IsValid)
+                {
+                    // Signature invalid
+                    File.Delete(local_file);
+                    return;
+                }
+            }
+		}
+         
+        /// <summary>Extract file</summary>
+        /// <param name="dlobject">A <see cref="Download" /> instance</param>   
+		protected void ExtractFile(object local_file_obj)
+    	{   
+    		string local_file = (string)local_file_obj;    		
+    		string dest = this.Options["install-path"];
+            Decompresser decomp = new Decompresser(local_file, dest);
+            decomp.Run();
+		 
+            if (decomp.DeleteFile)
+                File.Delete(local_file);
+    	}
+    	
+    	
     	/// <summary>Check whether repository's XML file has to be downloaded again</summary>
     	/// <exception cref="Nsm.RepositoryConnectionException">
     	/// Thrown if connection to repository failed
@@ -263,14 +317,30 @@ namespace Nsm
         	}
     	}
     	
-    	private void OnDownloadStatus(int dlid, string action, double progress)
+    	private void DownloadStatusCallback(int dlid, string action, double progress)
     	{
     		base.InvokeSignal(SignalType.DownloadStatus, action, progress);
-    		if ((int)progress == 1)
-    		{
-    			base.InvokeSignal(SignalType.Updated, this.DownloadToPluginId[dlid]);
-    			this.DownloadToPluginId.Remove(dlid);
-    		}
+    	}
+    	
+    	private void DownloadFinishedCallback(int dlid)
+    	{
+    		string plugin_id = this.DownloadToPluginId[dlid];
+    		string local_file = Path.Combine( this.Options["install-path"], Path.GetFileName(this.Repo[plugin_id].Url) );
+    	
+    		// Check file
+			this.CheckFile(local_file, this.Repo[plugin_id].Signature, this.Repo[plugin_id].Checksum);
+			
+			// Extract archive
+			Thread extractThread = new Thread( new ParameterizedThreadStart( this.ExtractFile ) );
+			extractThread.Start( local_file );			
+			while (extractThread.IsAlive)
+            {
+            	base.InvokeSignal(SignalType.DownloadStatus, "Extracting", -1.0);
+            	Thread.Sleep(SLEEP_TIME);
+            }
+            
+			base.InvokeSignal(SignalType.Updated, plugin_id);
+			this.DownloadToPluginId.Remove(dlid);
     	}
     	
     	/// <summary>Check whether first argument is newer as second one</summary>

@@ -1,6 +1,15 @@
 2007-04-18  Sebastian Pölsterl  <marduk@k-d-w.org>
 
-	* dbus-sharp
+	* src/libnsm/Downloaders/HttpDownloader.cs
+	* src/libnsm/Downloaders/AbstractDownloader.cs
+	* src/libnsm/Downloaders/FtpDownloader.cs
+	* src/libnsm/DownloadManager.cs
+	* src/libnsm/Download.cs:
+	Checking and extracting files now works
+
+2007-04-18  Sebastian Pölsterl  <marduk@k-d-w.org>
+
+	* dbus-sharp/*
 	* configure.ac:
 	Set required dbus-sharp version to 0.5.2,
 	because previous releases aren't thread-safe

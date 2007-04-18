@@ -9,15 +9,15 @@ namespace Nsm.Downloaders
 	/// <summary>Download files over HTTP</summary>
 	internal class HttpDownloader : AbstractDownloader
 	{	
-		public HttpDownloader(int id, string download_url, string download_dest, string signature, checksum checksumField) 
-		 : base(id, download_url, download_dest, signature, checksumField) { }
+		public HttpDownloader(int id, Download dl) 
+		 : base(id, dl) { }
 	
 		internal override void Download(object startPoint)
 		{
 			// TODO: HTTP rfc says that max 2 connections to a server are allowed
             try {
             	int startPointInt = Convert.ToInt32(startPoint);
-            	HttpWebRequest webReq = (HttpWebRequest)WebRequest.Create( base.download_url );
+            	HttpWebRequest webReq = (HttpWebRequest)WebRequest.Create( base.dl.Url );
             	webReq.AddRange(startPointInt);
             
             	// Set default authentication for retrieving the file
@@ -32,9 +32,9 @@ namespace Nsm.Downloaders
                 // Create a new file stream where we will be saving the data (local drive)
                 if (startPointInt == 0)
                 {
-                	strLocal = new FileStream(base.local_file, FileMode.Create, FileAccess.Write, FileShare.None);
+                	strLocal = new FileStream(base.dl.LocalFile, FileMode.Create, FileAccess.Write, FileShare.None);
                 } else {
-                	strLocal = new FileStream(base.local_file, FileMode.Append, FileAccess.Write, FileShare.None);
+                	strLocal = new FileStream(base.dl.LocalFile, FileMode.Append, FileAccess.Write, FileShare.None);
                 }
                 
                 // It will store the current number of bytes we retrieved from the server
@@ -48,7 +48,7 @@ namespace Nsm.Downloaders
                     // Write the data from the buffer to the local hard drive
                     strLocal.Write(downBuffer, 0, bytesSize);
                     // Invoke the method that updates the form's label and progress bar
-                    base.OnStatus( String.Format("Downloading {0}", Path.GetFileName(this.download_url)), (double)strLocal.Length/(fileSize + startPointInt) );
+                    base.OnStatus( String.Format("Downloading {0}", Path.GetFileName(base.dl.Url)), (double)strLocal.Length/(fileSize + startPointInt) );
                 }
                 
             } finally {                
@@ -56,6 +56,8 @@ namespace Nsm.Downloaders
                 strResponse.Close();
                 webResponse.Close();
             }
+            // Let the world know that we're done            
+            base.OnFinished();
 		}
 	}
 }

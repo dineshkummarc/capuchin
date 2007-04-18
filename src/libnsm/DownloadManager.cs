@@ -13,12 +13,17 @@ namespace Nsm
 	[Interface("org.gnome.NewStuffManager.DownloadManager")]
 	public class DownloadManager : MarshalByRefObject
 	{
+		private int downloadsIndex;
+		
 	    protected Dictionary<int, Download> Downloads;
-	    private int downloadsIndex;
 	    
 	    public delegate void DownloaderDel(object startPoint);
+	    
 	    public delegate void DownloadStatusHandler(int id, string action, double progress);
 	    public event DownloadStatusHandler DownloadStatus;
+		
+		public delegate void DownloadFinishedHandler(int id);
+		public event DownloadFinishedHandler DownloadFinished;
 	    
 	    public DownloadManager()
 	    {
@@ -41,13 +46,17 @@ namespace Nsm
 	    /// </returns>
 		internal int DownloadFile (string download_url, string download_dest, string signature, checksum checksumField)
 		{
-			AbstractDownloader dl = this.GetDownloader(this.downloadsIndex, download_url, download_dest,signature, checksumField);
-            dl.Status += new StatusHandler( this.OnDownloadStatus );
+			Download dl = new Download(this.downloadsIndex, download_url, download_dest, signature, checksumField);
+			
+			AbstractDownloader downloader = this.GetDownloader(this.downloadsIndex, dl);
+            downloader.Status += new StatusHandler( this.OnDownloadStatus );
+            downloader.Finished += new FinishedHandler( this.DownloadFinishedCallback );
             
-            Thread dlThread = new Thread( new ThreadStart(dl.Download) );
-			this.Downloads.Add( this.downloadsIndex, new Download(download_url, download_dest, dlThread) );
+            Thread downloaderThread = new Thread( new ThreadStart(downloader.Download) );
+            dl.Downloader = downloaderThread;
+			this.Downloads.Add( this.downloadsIndex, dl );
 			this.downloadsIndex++;
-			dlThread.Start();
+			downloaderThread.Start();
 			
 			Console.WriteLine("*** Started downloading file with id '{0}'", this.downloadsIndex-1);
 			
@@ -81,12 +90,18 @@ namespace Nsm
     		// Get file info
     		FileInfo f = new FileInfo( this.Downloads[id].LocalFile );
     		// Get Downloader
-			AbstractDownloader dl = this.GetDownloader(id, this.Downloads[id].Url, this.Downloads[id].Destination, null, null);
-            dl.Status += new StatusHandler( this.OnDownloadStatus );
+			AbstractDownloader downloader = this.GetDownloader(id, this.Downloads[id]);
+            downloader.Status += new StatusHandler( this.OnDownloadStatus );
+            downloader.Finished += new FinishedHandler( this.DownloadFinishedCallback );
             // Start Thread
-            Thread dlThread = new Thread( new ParameterizedThreadStart(dl.Download) );			
-			this.Downloads[id] = new Download(this.Downloads[id].Url, this.Downloads[id].Destination, dlThread);
-			dlThread.Start(f.Length);
+            Thread downloaderThread = new Thread( new ParameterizedThreadStart(downloader.Download) );
+            this.Downloads[id] = new Download ( id,
+            	this.Downloads[id].Url,
+            	this.Downloads[id].Destination,
+            	this.Downloads[id].Signature,
+            	this.Downloads[id].Checksum,
+            	downloaderThread);
+			downloaderThread.Start(f.Length);
 			
 			Console.WriteLine("*** Resuming download with id '{0}'", id);
     	}
@@ -97,24 +112,35 @@ namespace Nsm
     		{
     			DownloadStatus(id, action, progress);
     		}
-    		if ((int)progress == 1)
-    		{
-    			Console.WriteLine("*** Finished downloading file with id '{0}'", id);
-    			// Remove Download
-    			this.Downloads.Remove(id);
-    		}
+    	}
+    		
+    	protected void DownloadFinishedCallback(int id)
+    	{
+			Console.WriteLine("*** Finished downloading file with id '{0}'", id);
+            
+			// Remove Download
+			this.Downloads.Remove(id);
+			
+			this.OnDownloadFinished(id);
     	}
     	
+    	/// <summary>Emits the finished signal</summary>
+		protected void OnDownloadFinished(int id) {
+            if (DownloadFinished != null) {
+                DownloadFinished(id);
+            }
+		}
+    	
     	/// <summary>Returns the appropriate <see cref="Nsm.Downloaders.AbstractDownloader" /></summary>
-    	internal AbstractDownloader GetDownloader(int id, string download_url, string download_dest, string signature, checksum checksumField)
+    	internal AbstractDownloader GetDownloader(int id, Download dl)
     	{
-    		Uri uri = new Uri(download_url);
+    		Uri uri = new Uri(dl.Url);
             
             if (uri.Scheme == "http")
             {
-            	return new HttpDownloader(id, download_url, download_dest, signature, checksumField);
+            	return new HttpDownloader(id, dl);
             } else if (uri.Scheme == "ftp") {
-            	return new FtpDownloader(id, download_url, download_dest, signature, checksumField);
+            	return new FtpDownloader(id, dl);
             } else {
             	throw new NotImplementedException("Scheme '"+ uri.Scheme + "' is not supported");            	
             }
