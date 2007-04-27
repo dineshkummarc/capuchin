@@ -11,68 +11,22 @@ using Nsm.Verification;
 using Nsm.Compression;
 
 namespace Nsm
-{	
+{
+	public delegate void UpdatedHandler(string plugin_id);
+	public delegate void DownloadStatusHandler(string action, double progress);    
+			
 	[Interface("org.gnome.NewStuffManager.NewStuff")]
-	public abstract class NewStuffProxy : MarshalByRefObject
+	public interface INewStuff
 	{
-	    protected enum SignalType: uint {
-	       Updated,
-	       DownloadStatus,
-	       Closed
-	    }
-	    
-	    public delegate void UpdatedHandler(string plugin_id);
-	    public delegate void DownloadStatusHandler(string action, double progress);
-	    
-		public event UpdatedHandler Updated;
-	    public event DownloadStatusHandler DownloadStatus;
-	    
-	    internal delegate void ClosedHandler(string application_name);
-	    internal event ClosedHandler Closed;
-	    
-	    public readonly string ApplicationName;
-	    
-	    public NewStuffProxy(string application_name)
-	    {
-	        this.ApplicationName = application_name;
-	    }
-	    
-    	protected void InvokeSignal(SignalType s, params object[] args) {
-			switch (s) {
-				case SignalType.Updated:    	       
-					if (Updated != null)
-					{
-						Updated( (string)args[0] );
-					}
-					break;
-				case SignalType.DownloadStatus:
-					if (DownloadStatus != null)
-					{
-						DownloadStatus((string)args[0], (double)args[1]);
-					}
-					break;
-			    case SignalType.Closed:
-			        if (Closed != null)
-			        {
-			            Closed(this.ApplicationName);
-			        }
-			        break;
-			}
-		}
-	    
-    	public abstract void Update(string plugin_id);
-    	
-    	public abstract void Refresh();
-    	
-    	public abstract string[][] GetAvailableNewStuff();
-    	
-    	public abstract string[][] GetAvailableUpdates(string[][] plugins);
-    	
-    	public abstract string[] GetTags(string plugin_id);
-    	
-    	public abstract IDictionary<string, string> GetAuthor(string plugin_id);
-    	
-    	public abstract void Close();
+		event UpdatedHandler Updated;
+	    event DownloadStatusHandler DownloadStatus;
+		void Update(string plugin_id);   	
+    	void Refresh();    	
+    	string[][] GetAvailableNewStuff();    	
+    	string[][] GetAvailableUpdates(string[][] plugins);    	
+    	string[] GetTags(string plugin_id);    	
+    	IDictionary<string, string> GetAuthor(string plugin_id);    	
+    	void Close();
 	}
 	
 	public class RepositoryConnectionException : ApplicationException
@@ -83,9 +37,28 @@ namespace Nsm
 	}
 	
 	/// <summary>An application specific object that handels the plugins</summary>
-	public class NewStuff : NewStuffProxy, IDisposable
+	public class NewStuff : IDisposable,INewStuff
 	{
+	    event UpdatedHandler PluginUpdated;
+	    event DownloadStatusHandler PluginDownloadStatus;
+	    
+	    event UpdatedHandler INewStuff.Updated
+	    {
+	    	add { PluginUpdated += value; }
+	    	remove { PluginUpdated -= value; }
+	    }
+	    
+	    event DownloadStatusHandler INewStuff.DownloadStatus
+	    {
+	    	add { PluginDownloadStatus += value; }
+	    	remove { PluginDownloadStatus -= value; }
+	    }
+	    
+	    internal delegate void ClosedHandler(string application_name);
+	    internal event ClosedHandler Closed;
+	
 		public ItemsDict Repo;
+		public readonly string ApplicationName;
 		
 		protected string SpecFile;
 		protected bool ForceUpdate;
@@ -98,9 +71,10 @@ namespace Nsm
 	    
 	    /// <param name="application_name">Name of the application that object is related to</param>
 	    /// <remarks><code>application_name</code> must be the name of a configuration file without the .conf ending</remarks>
-		public NewStuff(string application_name) : base(application_name)
+		public NewStuff(string application_name)
 		{
 			Console.WriteLine("*** NewStuff init "+application_name);
+			this.ApplicationName = application_name;
 			
 			this.ForceUpdate = false;
 			this.SpecFile = Path.Combine(Globals.SPECS_DIR, application_name+".conf");
@@ -112,8 +86,12 @@ namespace Nsm
 			// Used to map DownloadId to PluginID
 			this.DownloadToPluginId = new Dictionary<int, string>();
 			// Forward DownloadStatus event
-			Globals.DLM.DownloadStatus += new DownloadManager.DownloadStatusHandler( this.DownloadStatusCallback );
-			Globals.DLM.DownloadFinished += new DownloadManager.DownloadFinishedHandler( this.DownloadFinishedCallback );
+			Globals.DLM.DownloadStatus += new DownloadManager.DownloadStatusHandler(
+				delegate(int dlid, string a, double p) { this.OnPluginDownloadStatus(a, p); }
+			);
+			Globals.DLM.DownloadFinished += new DownloadManager.DownloadFinishedHandler(
+				this.DownloadFinishedCallback
+			);
 		}
 		
 		~NewStuff()
@@ -133,7 +111,7 @@ namespace Nsm
 		}
 		
 		/// <summary>Load the repository</summary>
-		public override void Refresh()
+		public void Refresh()
 		{
 			Console.WriteLine("*** Refreshing");			
 			
@@ -166,7 +144,7 @@ namespace Nsm
 		/// An array of string arrays of size 3.
 		/// Whereas the first element is the plugin's id, second the plugin's name and third the description.
 		/// </returns>
-    	public override string[][] GetAvailableNewStuff()
+    	public string[][] GetAvailableNewStuff()
     	{
     		Console.WriteLine("*** Getting available Stuff");
     		
@@ -188,7 +166,7 @@ namespace Nsm
     	/// </param>
     	/// <returns>An array of string arrays of size 2.
     	/// First element is the plugin's ID, second its description</returns>
-    	public override string[][] GetAvailableUpdates(string[][] plugins)
+    	public string[][] GetAvailableUpdates(string[][] plugins)
     	{
             Console.WriteLine("*** Getting updates");
             
@@ -210,7 +188,7 @@ namespace Nsm
     	
     	/// <summary>Update the plugin with ID <code>plugin_id</code></summary>
     	/// <param name="plugin_id">Plugin's ID</param>
-		public override void Update(string plugin_id)
+		public void Update(string plugin_id)
 		{
 		    if (!this.Repo.ContainsKey(plugin_id))
 		        return;
@@ -224,7 +202,7 @@ namespace Nsm
 		/// <summary>Get tags for the plugin with ID <code>plugin_id</code></summary>
 		/// <param name="plugin_id">Plugin's ID</param>
 		/// <returns>An array of tags</returns>
-    	public override string[] GetTags(string plugin_id)
+    	public string[] GetTags(string plugin_id)
     	{
             Console.WriteLine("*** Getting tags for {0}", plugin_id);
             string[] tags = this.Repo[plugin_id].Tags;
@@ -234,19 +212,18 @@ namespace Nsm
     	/// <summary>Get the author's name and e-mail address for the plugin with ID <code>plugin_id</code></summary>
     	/// <param name="plugin_id">Plugin's ID</param>
     	/// <returns>Dictionary with keys "name" and "email"</returns>
-    	public override IDictionary<string, string> GetAuthor(string plugin_id)
+    	public IDictionary<string, string> GetAuthor(string plugin_id)
     	{
             Console.WriteLine("*** Getting author for {0}", plugin_id);
             return this.Repo[plugin_id].Author;
     	}
     	
     	/// <summary>Tell the NewStuff object that it isn't needed anymore</summary>
-    	public override void Close()
+    	public void Close()
     	{
     		Console.WriteLine("*** Closing");
-    		InvokeSignal(SignalType.Closed);
+    		this.OnClosed();
     	}
-    	
     	
     	/// <summary>Check checksum and signature of the file</summary>
     	/// <param name="local_file">Path to the downloaded file</param>
@@ -296,7 +273,30 @@ namespace Nsm
                 File.Delete(local_file);
     	}
     	
-    	
+        protected void OnPluginUpdated(string id)
+        {
+        	if (PluginUpdated != null)
+			{
+				PluginUpdated( id );			
+			}
+        }
+        
+        protected void OnPluginDownloadStatus(string action, double progress)
+        {
+        	if (PluginDownloadStatus != null)
+			{
+				PluginDownloadStatus(action, progress);
+			}
+        }
+        
+        protected void OnClosed()
+		{
+	        if (Closed != null)
+	        {
+	            Closed(this.ApplicationName);
+	        }
+		}
+		
     	/// <summary>Check whether repository's XML file has to be downloaded again</summary>
     	/// <exception cref="Nsm.RepositoryConnectionException">
     	/// Thrown if connection to repository failed
@@ -317,11 +317,6 @@ namespace Nsm
         	}
     	}
     	
-    	private void DownloadStatusCallback(int dlid, string action, double progress)
-    	{
-    		base.InvokeSignal(SignalType.DownloadStatus, action, progress);
-    	}
-    	
     	private void DownloadFinishedCallback(int dlid)
     	{
     		string plugin_id = this.DownloadToPluginId[dlid];
@@ -335,11 +330,11 @@ namespace Nsm
 			extractThread.Start( local_file );			
 			while (extractThread.IsAlive)
             {
-            	base.InvokeSignal(SignalType.DownloadStatus, "Extracting", -1.0);
+            	this.OnPluginDownloadStatus("Extracting", -1.0);
             	Thread.Sleep(SLEEP_TIME);
             }
-            
-			base.InvokeSignal(SignalType.Updated, plugin_id);
+            		Console.WriteLine("*** Updated {0}", plugin_id);
+			this.OnPluginUpdated(plugin_id);
 			this.DownloadToPluginId.Remove(dlid);
     	}
     	
@@ -372,6 +367,6 @@ namespace Nsm
         		int_arr[i] = Convert.ToInt32(string_arr[i]);
         	}
         	return int_arr;
-        }
+        }        
 	}
 }

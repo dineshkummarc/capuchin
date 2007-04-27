@@ -11,7 +11,12 @@ namespace Nsm
 {
     /// <summary>Entry point for applications to request their own <see cref="Nsm.NewStuff /> object</summary>
 	[Interface("org.gnome.NewStuffManager")]
-	public class NewStuffManager : MarshalByRefObject
+	public interface INewStuffManager
+	{
+		ObjectPath GetNewStuff(string app_name);
+	}
+	
+	public class NewStuffManager : INewStuffManager
 	{
 		
 		public const string NEW_STUFF_SERVICE = "org.gnome.NewStuffManager";

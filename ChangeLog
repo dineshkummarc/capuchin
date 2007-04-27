@@ -1,3 +1,11 @@
+2007-04-27  Sebastian Pölsterl  <marduk@k-d-w.org>
+
+	* src/libnsm/NewStuffManager.cs
+	* src/libnsm/NewStuff.cs:
+	Added interfaces for D-Bus objects and
+	removed subclassing of MarshalByRefObject.
+	D-Bus signals work know correctly.
+
 2007-04-26  Sebastian Pölsterl  <marduk@k-d-w.org>
 
 	* src/libnsm/Downloaders/FtpDownloader.cs:
