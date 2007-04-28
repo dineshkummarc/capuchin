@@ -1,3 +1,10 @@
+2007-04-28  Sebastian Pölsterl  <marduk@k-d-w.org>
+
+	* src/libnsm/DownloadManager.cs
+	* src/libnsm/NewStuff.cs:
+	Added D-Bus interface for DownloadManager.
+	Changed events for NewStuff.
+
 2007-04-27  Sebastian Pölsterl  <marduk@k-d-w.org>
 
 	* src/libnsm/NewStuffManager.cs

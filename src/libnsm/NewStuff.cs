@@ -39,20 +39,8 @@ namespace Nsm
 	/// <summary>An application specific object that handels the plugins</summary>
 	public class NewStuff : IDisposable,INewStuff
 	{
-	    event UpdatedHandler PluginUpdated;
-	    event DownloadStatusHandler PluginDownloadStatus;
-	    
-	    event UpdatedHandler INewStuff.Updated
-	    {
-	    	add { PluginUpdated += value; }
-	    	remove { PluginUpdated -= value; }
-	    }
-	    
-	    event DownloadStatusHandler INewStuff.DownloadStatus
-	    {
-	    	add { PluginDownloadStatus += value; }
-	    	remove { PluginDownloadStatus -= value; }
-	    }
+	    public event UpdatedHandler Updated;
+	    public event DownloadStatusHandler DownloadStatus;
 	    
 	    internal delegate void ClosedHandler(string application_name);
 	    internal event ClosedHandler Closed;
@@ -86,10 +74,10 @@ namespace Nsm
 			// Used to map DownloadId to PluginID
 			this.DownloadToPluginId = new Dictionary<int, string>();
 			// Forward DownloadStatus event
-			Globals.DLM.DownloadStatus += new DownloadManager.DownloadStatusHandler(
-				delegate(int dlid, string a, double p) { this.OnPluginDownloadStatus(a, p); }
+			Globals.DLM.DownloadStatus += new DownloadManagerStatusHandler(
+				delegate(int dlid, string a, double p) { this.OnDownloadStatus(a, p); }
 			);
-			Globals.DLM.DownloadFinished += new DownloadManager.DownloadFinishedHandler(
+			Globals.DLM.DownloadFinished += new DownloadManagerFinishedHandler(
 				this.DownloadFinishedCallback
 			);
 		}
@@ -273,19 +261,19 @@ namespace Nsm
                 File.Delete(local_file);
     	}
     	
-        protected void OnPluginUpdated(string id)
+        protected void OnUpdated(string id)
         {
-        	if (PluginUpdated != null)
+        	if (Updated != null)
 			{
-				PluginUpdated( id );			
+				Updated( id );			
 			}
         }
         
-        protected void OnPluginDownloadStatus(string action, double progress)
+        protected void OnDownloadStatus(string action, double progress)
         {
-        	if (PluginDownloadStatus != null)
+        	if (DownloadStatus != null)
 			{
-				PluginDownloadStatus(action, progress);
+				DownloadStatus(action, progress);
 			}
         }
         
@@ -330,11 +318,11 @@ namespace Nsm
 			extractThread.Start( local_file );			
 			while (extractThread.IsAlive)
             {
-            	this.OnPluginDownloadStatus("Extracting", -1.0);
+            	this.OnDownloadStatus("Extracting", -1.0);
             	Thread.Sleep(SLEEP_TIME);
             }
             		Console.WriteLine("*** Updated {0}", plugin_id);
-			this.OnPluginUpdated(plugin_id);
+			this.OnUpdated(plugin_id);
 			this.DownloadToPluginId.Remove(dlid);
     	}
     	

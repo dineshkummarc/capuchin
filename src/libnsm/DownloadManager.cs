@@ -9,21 +9,31 @@ using Nsm.Downloaders;
 
 namespace Nsm
 {
-	/// <summary>Class that manages downloads</summary>
+	public delegate void DownloadManagerStatusHandler(int id, string action, double progress);
+	public delegate void DownloadManagerFinishedHandler(int id);
+	
 	[Interface("org.gnome.NewStuffManager.DownloadManager")]
-	public class DownloadManager : MarshalByRefObject
+	public interface IDownloadManager
 	{
-		private int downloadsIndex;
+	    event DownloadManagerStatusHandler DownloadStatus;
+		event DownloadManagerFinishedHandler DownloadFinished;
+		int DownloadFile(string download_url, string download_dest);
+		void PauseDownload(int id);
+		void AbortDownload(int id);
+		void ResumeDownload(int id);
+	}
+	
+	/// <summary>Class that manages downloads</summary>
+	public class DownloadManager : IDownloadManager
+	{
+		public event DownloadManagerStatusHandler DownloadStatus;
+		public event DownloadManagerFinishedHandler DownloadFinished;
+		
+		public delegate void DownloaderDel(object startPoint);
 		
 	    protected Dictionary<int, Download> Downloads;
 	    
-	    public delegate void DownloaderDel(object startPoint);
-	    
-	    public delegate void DownloadStatusHandler(int id, string action, double progress);
-	    public event DownloadStatusHandler DownloadStatus;
-		
-		public delegate void DownloadFinishedHandler(int id);
-		public event DownloadFinishedHandler DownloadFinished;
+	    private int downloadsIndex;
 	    
 	    public DownloadManager()
 	    {
@@ -113,6 +123,13 @@ namespace Nsm
     			DownloadStatus(id, action, progress);
     		}
     	}
+    	
+    	/// <summary>Emits the finished signal</summary>
+		protected void OnDownloadFinished(int id) {
+            if (DownloadFinished != null) {
+                DownloadFinished(id);
+            }
+		}
     		
     	protected void DownloadFinishedCallback(int id)
     	{
@@ -123,13 +140,6 @@ namespace Nsm
 			
 			this.OnDownloadFinished(id);
     	}
-    	
-    	/// <summary>Emits the finished signal</summary>
-		protected void OnDownloadFinished(int id) {
-            if (DownloadFinished != null) {
-                DownloadFinished(id);
-            }
-		}
     	
     	/// <summary>Returns the appropriate <see cref="Nsm.Downloaders.AbstractDownloader" /></summary>
     	internal AbstractDownloader GetDownloader(int id, Download dl)
