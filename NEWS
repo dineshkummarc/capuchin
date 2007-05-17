@@ -1,4 +1,11 @@
 =============
+Version 0.2.3
+=============
+This release is build upon the managed D-Bus 0.5.2, because it's the first release
+that is thread-safe. In addition, a DownloadManager interface was added. As always
+some bugs were fixed as well.
+
+=============
 Version 0.2.0
 =============
 The first release to be written 100% in C#.
