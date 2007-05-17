@@ -7,7 +7,7 @@ using System.Threading;
 namespace Nsm.Downloaders
 {
 	
-	internal delegate void StatusHandler(int id, string action, double progress);
+	internal delegate void StatusHandler(int id, double progress);
 	internal delegate void FinishedHandler(int id);
     
     /// <summary>Abstract base class to download a file</summary>
@@ -64,11 +64,10 @@ namespace Nsm.Downloaders
 		internal abstract void Download(object startPoint);
 		
 		/// <summary>Emits status signal</summary>
-		/// <param name="action">Short description of the current process</param>
 		/// <param name="progress">The progress of the current operation (0.0 to 1.0)</param>
-		protected void OnStatus(string action, double progress) {
+		protected void OnStatus(double progress) {
             if (Status != null) {
-                Status(this.Id, action, progress);
+                Status(this.Id, progress);
             }
 		}
 		

@@ -75,7 +75,7 @@ namespace Nsm
 			this.DownloadToPluginId = new Dictionary<int, string>();
 			// Forward DownloadStatus event
 			Globals.DLM.DownloadStatus += new DownloadManagerStatusHandler(
-				delegate(int dlid, string a, double p) { this.OnDownloadStatus(a, p); }
+				delegate(int dlid, double p) { this.OnDownloadStatus("Downloading", p); }
 			);
 			Globals.DLM.DownloadFinished += new DownloadManagerFinishedHandler(
 				this.DownloadFinishedCallback
@@ -106,6 +106,7 @@ namespace Nsm
 			if (this.ForceUpdate || !this.IsCacheUpToDate())
 			{
 				Console.WriteLine("*** Downloading XML file");
+				File.Delete( this.LocalRepo );
 				using (WebClient wc = new WebClient())
 				{
 					wc.DownloadFile( this.Options["repo"], this.LocalRepo );

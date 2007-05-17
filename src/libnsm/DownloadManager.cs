@@ -9,7 +9,7 @@ using Nsm.Downloaders;
 
 namespace Nsm
 {
-	public delegate void DownloadManagerStatusHandler(int id, string action, double progress);
+	public delegate void DownloadManagerStatusHandler(int id, double progress);
 	public delegate void DownloadManagerFinishedHandler(int id);
 	
 	[Interface("org.gnome.NewStuffManager.DownloadManager")]
@@ -116,11 +116,11 @@ namespace Nsm
 			Console.WriteLine("*** Resuming download with id '{0}'", id);
     	}
     	
-    	protected void OnDownloadStatus(int id, string action, double progress)
+    	protected void OnDownloadStatus(int id, double progress)
     	{
     		if (DownloadStatus != null)
     		{
-    			DownloadStatus(id, action, progress);
+    			DownloadStatus(id, progress);
     		}
     	}
     	

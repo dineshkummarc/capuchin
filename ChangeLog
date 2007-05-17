@@ -1,5 +1,20 @@
 2007-05-17  Sebastian Pölsterl  <marduk@k-d-w.org>
 
+	* examples/testapp.py:
+ 	Fixed bug that caused program to exit too early
+
+2007-05-17  Sebastian Pölsterl  <marduk@k-d-w.org>
+
+	* examples/DownloadManager.py
+	* src/libnsm/Downloaders/HttpDownloader.cs
+	* src/libnsm/Downloaders/AbstractDownloader.cs
+	* src/libnsm/Downloaders/FtpDownloader.cs
+	* src/libnsm/NewStuff.cs
+	* src/libnsm/DownloadManager.cs:
+	Removed "action" parameter for DownloadManagerStatus event
+
+2007-05-17  Sebastian Pölsterl  <marduk@k-d-w.org>
+
 	* examples/DownloadManager.py:
 	Added an example that implements a small
 	download manager

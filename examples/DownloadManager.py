@@ -116,7 +116,7 @@ class DownloadManagerWindow(gtk.Window):
 			self.button_pause.set_sensitive(False)
 			self.button_stop.set_sensitive(False)
 		
-	def __on_download_status(self, dlid, action, progress):
+	def __on_download_status(self, dlid, progress):
 		self.liststore.set_value(self.dlid_to_iter[dlid], 2, progress*100)
 		self.liststore.set_value(self.dlid_to_iter[dlid], 3, "%i%%" % (progress*100))
 		

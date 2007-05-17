@@ -36,6 +36,7 @@ class TestApp:
         
     def on_newstuff_updated(self, plugin_id):
         print "NewStuff updated:", plugin_id
+	self.newstuff.Close() # We did everything we wanted to
 	
     def on_download_status(self, action, progress):
         # Progress is either between 0.0 and 1.0 while downloading
@@ -69,10 +70,7 @@ class TestApp:
         for plugin_id in available_updates:
             print "Starting update for %s" % plugin_id
             self.newstuff.Update(plugin_id)
-            
-    def finalize(self):
-        self.newstuff.Close()
-        
+              
 if __name__=='__main__':
     gobject.threads_init()
     dbus.glib.init_threads()
@@ -81,5 +79,4 @@ if __name__=='__main__':
     app.load_repo()
     app.get_all()
     app.get_updates()
-    app.finalize()
     mainloop.run()
