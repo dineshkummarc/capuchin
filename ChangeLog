@@ -1,5 +1,12 @@
 2007-05-17  Sebastian Pölsterl  <marduk@k-d-w.org>
 
+	* configure.ac:
+	Post release version bump
+
+========== Version 0.2.3 released 2007-05-17 ==========
+
+2007-05-17  Sebastian Pölsterl  <marduk@k-d-w.org>
+
 	* examples/Makefile.am
 	* configure.ac
 	* Makefile.am:

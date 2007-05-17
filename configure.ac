@@ -1,7 +1,7 @@
 AC_INIT(src/nsm/Main.cs)
 AC_CANONICAL_SYSTEM
 AC_PREREQ(2.54)
-AM_INIT_AUTOMAKE(new-stuff-manager, 0.2.3)
+AM_INIT_AUTOMAKE(new-stuff-manager, 0.2.4)
 AM_MAINTAINER_MODE
 
 AC_PROG_INSTALL
