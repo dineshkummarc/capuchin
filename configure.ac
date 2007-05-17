@@ -87,6 +87,7 @@ AC_OUTPUT([
 Makefile
 data/Makefile
 dbus-sharp/Makefile
+examples/Makefile
 nsm-sharp.pc
 specs/Makefile
 src/Makefile

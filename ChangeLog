@@ -1,5 +1,12 @@
 2007-05-17  Sebastian Pölsterl  <marduk@k-d-w.org>
 
+	* examples/Makefile.am
+	* configure.ac
+	* Makefile.am:
+	Added examples to distribution
+
+2007-05-17  Sebastian Pölsterl  <marduk@k-d-w.org>
+
 	* src/libnsm/NewStuff.cs:
 	Fixed bug that prevented to update chached repository
 

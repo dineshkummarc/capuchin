@@ -1,4 +1,4 @@
-SUBDIRS = data specs 
+SUBDIRS = data examples specs 
 if ENABLE_INTERNAL_NDESKDBUS
 SUBDIRS += dbus-sharp
 endif
