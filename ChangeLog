@@ -1,5 +1,10 @@
 2007-05-17  Sebastian Pölsterl  <marduk@k-d-w.org>
 
+	* src/libnsm/NewStuff.cs:
+	Fixed bug that prevented to update chached repository
+
+2007-05-17  Sebastian Pölsterl  <marduk@k-d-w.org>
+
 	* examples/testapp.py:
  	Fixed bug that caused program to exit too early
 
