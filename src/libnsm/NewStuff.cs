@@ -321,7 +321,7 @@ namespace Nsm
             	this.OnDownloadStatus("Extracting", -1.0);
             	Thread.Sleep(SLEEP_TIME);
             }
-            		Console.WriteLine("*** Updated {0}", plugin_id);
+			Console.WriteLine("*** Updated {0}", plugin_id);
 			this.OnUpdated(plugin_id);
 			this.DownloadToPluginId.Remove(dlid);
     	}

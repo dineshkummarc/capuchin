@@ -1,3 +1,9 @@
+2007-05-17  Sebastian Pölsterl  <marduk@k-d-w.org>
+
+	* examples/DownloadManager.py:
+	Added an example that implements a small
+	download manager
+
 2007-04-28  Sebastian Pölsterl  <marduk@k-d-w.org>
 
 	* src/libnsm/DownloadManager.cs

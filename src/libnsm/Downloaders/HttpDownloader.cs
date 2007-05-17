@@ -51,7 +51,7 @@ namespace Nsm.Downloaders
                     base.OnStatus( String.Format("Downloading {0}", Path.GetFileName(base.dl.Url)), (double)strLocal.Length/(fileSize + startPointInt) );
                 }
                 
-            } finally {                
+            } finally {
                 strLocal.Close();
                 strResponse.Close();
                 webResponse.Close();

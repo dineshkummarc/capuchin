@@ -3,3 +3,4 @@
 * bittorrent integration
 * show exact progress while extracting
 * better error handling on download error (404 etc.)
+* show download speed
