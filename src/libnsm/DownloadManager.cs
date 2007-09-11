@@ -31,7 +31,7 @@ namespace Nsm
 		
 		public delegate void DownloaderDel(object startPoint);
 		
-	    protected Dictionary<int, Download> Downloads;
+	    internal Dictionary<int, Download> Downloads;
 	    
 	    private int downloadsIndex;
 	    

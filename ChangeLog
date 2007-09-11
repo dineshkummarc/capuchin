@@ -1,3 +1,8 @@
+2007-09-11	Sebastian Pölsterl	<sebp@cvs.gnome.org>
+
+	* src/libnsm/DownloadManager.cs:
+	Fixed: DownloadManager.Downloads is less accessible than Nsm.Download
+
 2007-05-17  Sebastian Pölsterl  <marduk@k-d-w.org>
 
 	* configure.ac:
