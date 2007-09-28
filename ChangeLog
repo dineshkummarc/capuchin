@@ -1,3 +1,8 @@
+2007-09-28  Sebastian Pölsterl  <marduk@k-d-w.org>
+
+	* doc/:
+	Added doc dir containing API doc and tutorial
+
 2007-09-11	Sebastian Pölsterl	<sebp@cvs.gnome.org>
 
 	* src/libnsm/DownloadManager.cs:
