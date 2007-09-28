@@ -1,0 +1,478 @@
+Presenting NewStuffManager
+============================
+Sebastian Pölsterl
+
+This tutorial teaches you how to use NewStuffManager
+
+[[how-it-works]]
+How it works
+------------
+
+[[setup-xml]]
+=== Setup XML file
+First of all, you'll need a XML file that contains the information of your repository. A minimum version could look like this.
+
+[xml]
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<items>
+    <item>
+        <id>leoorg.py</id>
+        <name>Leo.org dictionary</name>
+        <version>1.1.0.0</version>
+        <url>http://www.k-d-w.org/clipboard/deskbar/leoorg.tar.bz2</url>
+    </item>
+    <item>
+        <id>yahoo.py</id>
+        <name>Yahoo! Search</name>
+        <version>3.1.1.0</version>
+        <url>http://raphael.slinckx.net/deskbar/repository/yahoo.py</url>
+    </item>
+    ...
+</items>
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Whereas `id` is a unique identifier that helps your application to recognize the plugin. `name` and `version` are self-explanatory. Finally, `url` must point to the download location of the plugin.
+
+Several MIME-types are supported:
+
+* application/x-compressed-tar (tar.gz, tgz)
+* application/x-bzip-compressed-tar (tar.bz2)
+* application/zip
+* application/x-tar
+* text/x-python
+
+[[setup-spec]]
+=== Setup spec file
+Secondly, you need a simple INI-like file that points to the location of your XML file from above and tells NewStuffManager where to store the downloaded files.
+
+--------------------------------------------------------------------
+[<your_application_name>]
+repo=http://www.k-d-w.org/clipboard/deskbar/repository2.xml
+install-path=~/.gnome2/deskbar-applet/handlers
+--------------------------------------------------------------------
+
+Save this file under '$\{pkgdatadir\}/new-stuff-manager/specs/`<your_application_name>`.conf'.
+'$\{pkgdatadir\}' mostly is '/usr/share'. You must remember what you typed for `<your_application_name>`, you'll need this information in the client. We use 'deskbarapplet' as an example.
+
+[[python-client]]
+Python client
+-------------
+Now it's time to write a client. I do this in Python here.
+
+Firstly, you need to connect to the D-Bus daemon and request the link:./api.html#NewStuffManager[NewStuffManager] object.
+
+[python]
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+#!/usr/bin/env python
+
+import gobject
+import dbus, dbus.glib
+
+NEW_STUFF_SERVICE = 'org.gnome.NewStuffManager'
+NEW_STUFF_IFACE = 'org.gnome.NewStuffManager.NewStuff'
+NEW_STUFF_MANAGER_IFACE = 'org.gnome.NewStuffManager'
+NEW_STUFF_MANAGER_PATH = '/org/gnome/NewStuffManager'
+
+# We define some plugins here
+PLUGINS = [('leoorg.py', '0.1.0'), # id, version
+           ('yahoo.py', '0.3.0'),
+          ]
+
+def global_error_handler(e):
+    print "DBUS ERROR:", e
+
+class TestApp:
+    
+    def __init__(self):
+        # Create SessionBus
+        bus = dbus.SessionBus()
+        # Get proxy object of NewStuffManager
+        proxy_obj_manager = bus.get_object(NEW_STUFF_SERVICE, NEW_STUFF_MANAGER_PATH)
+        # Apply the correct interace to the proxy object
+        self.newstuffmanager = dbus.Interface(proxy_obj_manager, NEW_STUFF_MANAGER_IFACE)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+link:./api.html#NewStuffManager[NewStuffManager] supports only one method. This method is called `GetNewStuff` and expects a string as the only argument and returns an object's path. This string must be the name of a file in NewStuffManager's specs dir without the '.conf' suffix. We created such file above.
+
+[python]
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        object_path = self.newstuffmanager.GetNewStuff('deskbarapplet') # deskbarapplet = <your_application_name>
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Now we connect to the D-Bus object `object_path` points to.
+
+[python]
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        proxy_obj_stuff = bus.get_object(NEW_STUFF_SERVICE, object_path)
+        self.newstuff = dbus.Interface(proxy_obj_stuff, NEW_STUFF_IFACE)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The link:./api.html#NewStuff[NewStuff] interface supports two signals:
+
+1. `Updated`, will be emited when a plugin has been updated successfully
+2. `DownloadStatus`, gives you the current download status. This is useful for implementing a progressbar.
+
+Now we connect to both of these signals.
+
+[python]
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        self.newstuff.connect_to_signal('Updated', self.on_newstuff_updated)
+        self.newstuff.connect_to_signal('DownloadStatus', self.on_download_status)
+        
+    def on_newstuff_updated(self, plugin_id):
+        print "NewStuff updated:", plugin_id
+	
+    def on_download_status(self, action, progress):
+        # Progress is either between 0.0 and 1.0 while downloading
+        # or -1.0 while extracting to point out that the exact progress
+        # is unknown. A gtk.ProgressBar should pulse here.
+        print "Current action: %s, progress: %s" % (action, progress)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Now we've setup the application specific link:./api.html#NewStuff[NewStuff] object. It's time to load the repository.
+
+[python]
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    def load_repo(self):
+        self.newstuff.Refresh()
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The XML file has been parsed now and the information stored. Now let's see what the repository contains.
+
+[python]
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    def get_all(self):
+        def reply_GetAvailableNewStuff(newstuff):
+            print "The following stuff is available:"
+            for plugin_id, name, desc in newstuff:
+                print "ID: %s, NAME: %s, DESCRIPTION: %s" % (plugin_id, name, desc)
+            print
+        self.newstuff.GetAvailableNewStuff(reply_handler=reply_GetAvailableNewStuff, error_handler=global_error_handler)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+But now we get all the items that contains the repository. What if we only want to get the plugins that are outdated?
+
+[python]
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    def get_updates(self):
+         def reply_GetAvailableUpdates(updates):            
+            print "The following updates are available:"
+            available_updates = []
+            for plugin_id, desc in updates:
+                available_updates.append(plugin_id)
+                print "ID: %s, DESC: %s" % (plugin_id, desc)
+            print
+            self.update_plugins(available_updates)
+         self.newstuff.GetAvailableUpdates(PLUGINS, reply_handler=reply_GetAvailableUpdates, error_handler=global_error_handler)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+We know which plugin can be updated. So let's update all outdated plugins.
+
+[python]
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    def update_plugins(self, available_updates):
+        for plugin_id in available_updates:
+            print "Starting update for %s" % plugin_id
+            self.newstuff.Update(plugin_id)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+This call starts the download process. Progress will be monitored by `self.on_download_status`. Finally, if downloading and extracting is complete `self.on_newstuff_updated` will be called.
+
+Lastly, we have to tell the link:./api.html#NewStuff[NewStuff] object that we are finished
+
+[python]
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    def finalize(self):
+        self.newstuff.Close()
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Now let's put everything together.
+
+[python]
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+if __name__=='__main__':
+    gobject.threads_init()
+    dbus.glib.init_threads()
+    mainloop = gobject.MainLoop()
+    app = TestApp()
+    app.load_repo()
+    app.get_all()
+    app.get_updates()
+    app.finalize()
+    mainloop.run()
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+If you run the above script you should get the following output.
+
+.Output of Python client
+............................
+The following stuff is available:
+ID: ssh.py, NAME: SSH, DESCRIPTION: Quickly open a terminal with a new ssh connection to a host.
+ID: yahoo.py, NAME: Yahoo! Search, DESCRIPTION: Search Yahoo! as you type
+ID: rhythmbox.py, NAME: Rhythmbox, DESCRIPTION: Supports play, pause, next, and previous commands and querys rhymthmdb
+ID: recent.py, NAME: GTK+ 2.10 Recent files, DESCRIPTION: Searches recent files
+ID: aim_deskbar.py, NAME: Gaim Deskbar Plug-in, DESCRIPTION: Start a conversation with an online Gaim buddy.
+ID: gmail-deskbar-hack.py, NAME: Gmail Deskbar, DESCRIPTION: Search all your mail at Gmail
+ID: leoorg.py, NAME: Leo.org dictionary, DESCRIPTION: Query dict.leo.org
+ID: calculator-1-4.py, NAME: Deskbar Calculator, DESCRIPTION: Calculator
+
+The following updates are available:
+ID: leoorg.py, DESC: Query dict.leo.org
+ID: yahoo.py, DESC: Search Yahoo! as you type
+
+Starting update for leoorg.py
+Starting update for yahoo.py
+Current action: Downloading leoorg.tar.bz2, progress: 0.0
+Current action: Downloading leoorg.tar.bz2, progress: 2.80547945205
+Current action: Extracting leoorg.tar.bz2, progress: -1.0
+Current action: Extracting leoorg.tar.bz2, progress: -1.0
+Current action: Extracting leoorg.tar.bz2, progress: -1.0
+Current action: Extracting leoorg.tar.bz2, progress: -1.0
+Current action: Extracting leoorg.tar.bz2, progress: -1.0
+Current action: Extracting leoorg.tar.bz2, progress: -1.0
+NewStuff updated: leoorg.py
+Current action: Downloading yahoo.py, progress: 0.0
+Current action: Downloading yahoo.py, progress: 4.36906666667
+Current action: Extracting yahoo.py, progress: -1.0
+Current action: Extracting yahoo.py, progress: -1.0
+NewStuff updated: yahoo.py
+............................
+
+[NOTE]
+=====================================================================
+You can download the complete script from http://www.k-d-w.org/NewStuffManager/testapp.txt[]
+=====================================================================
+
+[[python-example]]
+=== Example
+
+.Deskbar-Applet
+===============================================
+
+.A list of available plugins that haven't been installed, yet
+image::images/deskbar01_thumb.png[link="images/deskbar01.png"]
+
+.An update is available
+image::images/deskbar02_thumb.png[link="images/deskbar02.png"]
+
+===============================================
+
+[[csharp-client]]
+C# client
+---------
+This example program makes use of the http://www.ndesk.org/DBusSharp[managed D-Bus] library.
+
+First of all, we need to make sure to import the necessary libraries and we have to define some interfaces to get the corresponding D-Bus object later on.
+
+[csharp]
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using NDesk.DBus;
+
+[Interface("org.gnome.NewStuffManager")]
+public interface INewStuffManager
+{
+	ObjectPath GetNewStuff(string application_name);
+}
+
+public delegate void UpdatedHandler(string plugin_id);
+public delegate void DownloadStatusHandler(string action, double progress);
+[Interface("org.gnome.NewStuffManager.NewStuff")]
+public interface INewStuff
+{
+	event UpdatedHandler Updated;
+	event DownloadStatusHandler DownloadStatus;
+	
+	void Update(string plugin_id);    	
+	void Refresh();
+	string[][] GetAvailableNewStuff();
+	string[][] GetAvailableUpdates(string[][] plugins);
+	string[] GetTags(string plugin_id);
+	IDictionary<string, string> GetAuthor(string plugin_id);
+	void Close();
+}
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Now it's time to setup the D-Bus connection and get the link:./api.html#NewStuffManager[NewStuffManager] object.
+
+[csharp]
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+public class TestNSM
+{
+	protected const string NEW_STUFF_SERVICE = "org.gnome.NewStuffManager";
+	protected const string NEW_STUFF_MANAGER_PATH = "/org/gnome/NewStuffManager";
+	
+	protected INewStuffManager stuffmanager;
+	protected INewStuff newstuff;
+	
+	public TestNSM()
+	{
+		Bus bus = Bus.Session;
+		
+		this.stuffmanager = bus.GetObject<INewStuffManager> (NEW_STUFF_SERVICE, new ObjectPath (NEW_STUFF_MANAGER_PATH)); 
+	}
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+After that we can get the application's link:./api.html#NewStuff[NewStuff] object.
+
+[csharp]
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+	public void testGetNewStuff()
+	{
+		ObjectPath path = this.stuffmanager.GetNewStuff ("deskbarapplet");
+		
+		Bus bus = Bus.Session;
+		this.newstuff = bus.GetObject<INewStuff> (NEW_STUFF_SERVICE, path);
+		this.newstuff.Updated += new UpdatedHandler ( this.OnNewStuffUpdated );
+		this.newstuff.DownloadStatus += new DownloadStatusHandler ( this.OnDownloadStatus );
+	}
+	
+	protected void OnNewStuffUpdated(string plugin_id)
+	{
+		Console.WriteLine ("NewStuff updated: {0}", plugin_id);
+	}
+	
+	protected void OnDownloadStatus(string action, double progress)
+	{
+		Console.WriteLine ("DOWNLOAD: {0} {1}", action, progress);
+	}
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Now we have to load the repository
+
+[csharp]
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+	public void testRefresh()
+	{
+		this.newstuff.Refresh();
+	}
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+and then we can fetch a list of available stuff.
+
+[csharp]
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+	public void testGetAvailableNewStuff()
+	{
+		string[][] stuff = this.newstuff.GetAvailableNewStuff();
+		Console.WriteLine ("ALL:");
+		foreach (string[] s in stuff)
+		{
+			Console.WriteLine ("{0}, {1}, {2}", s[0], s[1], s[2]);
+		}
+	}
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Now we want to figure out if updates are available.
+
+[csharp]
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+	public void testGetAvailableUpdates()
+	{
+		string[][] plugins = new string[2][];
+		plugins[0] = new string[] {"leoorg.py", "0.2.0"};
+		plugins[1] = new string[] {"ssh.py", "0.0.9"};
+		
+		string[][] updates = this.newstuff.GetAvailableUpdates (plugins);
+		Console.WriteLine ("UPDATES:");
+		foreach (string[] s in updates)
+		{
+			Console.WriteLine ("{0}, {1}", s[0], s[1]);
+		}
+	}
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+If you want to fetch tags of a plugin or it's author you can do this like the following.
+
+[csharp]
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+	public void testGetTags()
+	{
+		string[] tags = this.newstuff.GetTags("leoorg.py");
+		Console.WriteLine ("TAGS:");
+		foreach (string t in tags)
+		{
+			Console.WriteLine (t);
+		}
+	}
+	
+	public void testGetAuthor()
+	{
+		IDictionary<string, string> author = this.newstuff.GetAuthor("leoorg.py");
+		Console.WriteLine ("AUTHOR: {0}, {1}", author["name"], author["email"]);
+	}
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+But most important is updating a plugin.
+
+[csharp]
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+	public void testUpdate()
+	{
+		this.newstuff.Update("leoorg.py");
+	}
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+If were done we tell new-stuff-manager that the link:./api.html#NewStuff[NewStuff] object isn't needed anymore.
+
+[csharp]
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+	public void testClose()
+	{
+		this.newstuff.Close();
+	}
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Finally, we but everything together.
+
+[csharp]
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+	public static void Main (string[] args)
+	{
+		TestNSM test = new TestNSM();
+		test.testGetNewStuff();
+		test.testRefresh();
+		test.testGetAvailableNewStuff();
+		test.testGetAvailableUpdates();
+		test.testGetTags();
+		test.testGetAuthor();
+		test.testUpdate();
+		Thread.Sleep(5000); // Wait 5s for update to complete, because we have no mainloop
+		test.testClose();
+	}
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The output should look like the following:
+
+.Output of C# client
+..........................
+ALL:
+gmail-deskbar-hack.py, Gmail Deskbar, Search all your mail at Gmail
+aim_deskbar.py, Gaim Deskbar Plug-in, Start a conversation with an online Gaim buddy.
+recent.py, GTK+ 2.10 Recent files, Searches recent files
+calculator-1-4.py, Deskbar Calculator, Calculator
+yahoo.py, Yahoo! Search, Search Yahoo! as you type
+ssh.py, SSH, Quickly open a terminal with a new ssh connection to a host.
+leoorg.py, Leo.org dictionary, Query dict.leo.org
+rhythmbox.py, Rhythmbox, Supports play, pause, next, and previous commands and querys rhymthmdb
+UPDATES:
+leoorg.py, Query dict.leo.org
+TAGS:
+Dictionary
+Translation
+Utility
+AUTHOR: Deskbar Team, foo@bar.com
+DOWNLOAD: Downloading leoorg.tar.bz2 0,701369863013699
+DOWNLOAD: Downloading leoorg.tar.bz2 0,894178082191781
+DOWNLOAD: Downloading leoorg.tar.bz2 1
+DOWNLOAD: Extracting -1
+NewStuff updated: leoorg.py
+..........................
+
+[NOTE]
+==========================
+You can download the complete source at http://www.k-d-w.org/NewStuffManager/testapp.cs[]
+==========================
+
