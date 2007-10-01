@@ -1,7 +1,7 @@
 #! /bin/sh
 
-PROJECT=NewStuffManager
-FILE=src/libnsm/NewStuffManager.cs
+PROJECT=Capuchin
+FILE=src/libcapuchin/Capuchin.cs
 CONFIGURE=configure.ac
 
 : ${AUTOCONF=autoconf}

@@ -1,2 +1,0 @@
-#!/bin/sh
-exec @MONO@ @prefix@/lib/new-stuff-manager/new-stuff-manager.exe $MONO_EXTRA_ARGS "$@"

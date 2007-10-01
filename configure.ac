@@ -1,7 +1,7 @@
-AC_INIT(src/nsm/Main.cs)
+AC_INIT(src/capuchin/Main.cs)
 AC_CANONICAL_SYSTEM
 AC_PREREQ(2.54)
-AM_INIT_AUTOMAKE(new-stuff-manager, 0.2.4)
+AM_INIT_AUTOMAKE(capuchin, 0.3.0)
 AM_MAINTAINER_MODE
 
 AC_PROG_INSTALL
@@ -88,18 +88,18 @@ Makefile
 data/Makefile
 dbus-sharp/Makefile
 examples/Makefile
-nsm-sharp.pc
+capuchin-sharp.pc
 specs/Makefile
 src/Makefile
-src/libnsm/Makefile
-src/libnsm/Globals.cs
-src/libnsm/AssemblyInfo.cs
-src/nsm/Makefile
-src/nsm/AssemblyInfo.cs
+src/libcapuchin/Makefile
+src/libcapuchin/Globals.cs
+src/libcapuchin/AssemblyInfo.cs
+src/capuchin/Makefile
+src/capuchin/AssemblyInfo.cs
 ])
 
 echo "
-new-stuff-manager-$VERSION
+capuchin-$VERSION
 
     Install Prefix:               ${prefix}
     Datadir:                      ${expanded_datadir}

@@ -1,0 +1,25 @@
+<Combine name="new-stuff-manager" fileversion="2.0">
+  <Configurations active="Debug">
+    <Configuration name="Debug" ctype="CombineConfiguration">
+      <Entry build="True" name="dbus-sharp" configuration="Debug" />
+      <Entry build="True" name="capuchin" configuration="Debug" />
+      <Entry build="True" name="libcapuchin" configuration="Debug" />
+    </Configuration>
+    <Configuration name="Release" ctype="CombineConfiguration">
+      <Entry build="True" name="dbus-sharp" configuration="Release" />
+      <Entry build="True" name="capuchin" configuration="Release" />
+      <Entry build="True" name="libcapuchin" configuration="Release" />
+    </Configuration>
+  </Configurations>
+  <DeployTargets />
+  <StartMode startupentry="capuchin" single="True">
+    <Execute type="None" entry="dbus-sharp" />
+    <Execute type="None" entry="capuchin" />
+    <Execute type="None" entry="libcapuchin" />
+  </StartMode>
+  <Entries>
+    <Entry filename="./dbus-sharp/dbus-sharp.mdp" />
+    <Entry filename="./src/capuchin/capuchin.mdp" />
+    <Entry filename="./src/libcapuchin/libcapuchin.mdp" />
+  </Entries>
+</Combine>

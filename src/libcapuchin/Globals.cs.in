@@ -1,0 +1,25 @@
+
+using System;
+using System.IO;
+
+namespace Capuchin
+{
+	
+	
+	public sealed class Globals
+	{
+		
+		public const string SPECS_DIR = "@expanded_datadir@/capuchin/specs";
+	    public const string GPG_BIN = "@GPG@";
+	    public readonly string LOCAL_CACHE_DIR;
+	    
+	    public static readonly Globals Instance = new Globals();
+	    public static readonly DownloadManager DLM = new DownloadManager();
+	    
+	    private Globals()
+	    {
+            this.LOCAL_CACHE_DIR = Path.Combine( Environment.GetFolderPath(Environment.SpecialFolder.Personal), Path.Combine(".capuchin","cache") );	         
+	    }
+	    
+	}
+}

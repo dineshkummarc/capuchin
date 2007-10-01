@@ -1,1 +1,1 @@
-SUBDIRS = libnsm nsm
+SUBDIRS = libcapuchin capuchin
