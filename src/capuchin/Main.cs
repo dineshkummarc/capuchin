@@ -3,7 +3,6 @@ using System;
 using System.Threading;
 using Mono.GetOptions;
 using NDesk.DBus;
-using Capuchin;
 using org.freedesktop.DBus;
 
 class MainClass
@@ -18,10 +17,10 @@ class MainClass
 	{
 		opts.ProcessArgs(args);
 		
-		Capuchin nsm = new Capuchin();
+		Capuchin.Capuchin nsm = new Capuchin.Capuchin();
 		Bus.Session.Register(OBJECT_SERVICE, new ObjectPath(CAPUCHIN_OBJECT_PATH), nsm);
 		
-		DownloadManager dlm = new DownloadManager();
+		Capuchin.DownloadManager dlm = new Capuchin.DownloadManager();
 		Bus.Session.Register(OBJECT_SERVICE, new ObjectPath(DOWNLOADMANAGER_OBJECT_PATH), dlm);
 		
 		RequestNameReply reply = Bus.Session.RequestName(OBJECT_SERVICE);
