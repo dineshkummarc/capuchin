@@ -31,14 +31,16 @@ namespace Capuchin
 	        Gnome.Vfs.Vfs.Initialize ();
 	    }
 	    
-	    /// <summary>Request an application specific <see cref="Nsm.NewStuff /> object</summary>
+	    /// <summary>Request an application specific <see cref="Capuchin.AppObject /> object</summary>
 	    /// <param name="repository_url">URL to repository's XML file</param>
     	public virtual ObjectPath GetAppObject(string repository_url) {
     	    if (this.Objects.ContainsKey(repository_url))
     	        return this.Objects[repository_url];
     	    
-    		ObjectPath new_stuff_opath = new ObjectPath (String.Format(CAPUCHIN_PATH, this.GetApplicationName(repository_url)));
+            string object_path = String.Format(CAPUCHIN_PATH, this.GetApplicationName(repository_url));
+    		ObjectPath new_stuff_opath = new ObjectPath (object_path);
  
+            Logging.Log.Debug ("Creating app object at {0}", object_path);
             AppObject nsm = new AppObject(repository_url);
     	    nsm.Closed += new AppObject.ClosedHandler( this.OnClosed );
     	    Bus.Session.Register(CAPUCHIN_SERVICE, new_stuff_opath, nsm);
@@ -58,6 +60,7 @@ namespace Capuchin
     	{
     	   if (!Directory.Exists(Globals.Instance.LOCAL_CACHE_DIR))
 	       {
+               Logging.Log.Debug("Creating cache directory");
 	           Directory.CreateDirectory(Globals.Instance.LOCAL_CACHE_DIR);
 	       }
 	    }

@@ -1,5 +1,15 @@
 2007-10-05	Sebastian Pölsterl	<sebp@cvs.gnome.org>
 
+    * src/libcapuchin/Logging/
+    * src/libcapuchin/Makefile.am
+    * src/libcapuchin/AppObject.cs
+    * src/libcapuchin/Globals.cs.in
+    * src/libcapuchin/Capuchin.cs
+    * src/capuchin/Main.cs:
+    Added logging framework from beagle
+
+2007-10-05	Sebastian Pölsterl	<sebp@cvs.gnome.org>
+
     * doc/repository.rng:
     Added RelaxNG schema definition
 

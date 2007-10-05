@@ -11,6 +11,7 @@ namespace Capuchin
 		
 		public const string SPECS_DIR = "@expanded_datadir@/capuchin/specs";
 	    public const string GPG_BIN = "@GPG@";
+	    public readonly string LOCAL_CONFIG_DIR;
 	    public readonly string LOCAL_CACHE_DIR;
 	    
 	    public static readonly Globals Instance = new Globals();
@@ -18,7 +19,8 @@ namespace Capuchin
 	    
 	    private Globals()
 	    {
-            this.LOCAL_CACHE_DIR = Path.Combine( Environment.GetFolderPath(Environment.SpecialFolder.Personal), Path.Combine(".capuchin","cache") );	         
+            this.LOCAL_CONFIG_DIR = Path.Combine ( Environment.GetFolderPath(Environment.SpecialFolder.Personal), ".capuchin" );
+            this.LOCAL_CACHE_DIR = Path.Combine (this.LOCAL_CONFIG_DIR, "cache");
 	    }
 	    
 	}

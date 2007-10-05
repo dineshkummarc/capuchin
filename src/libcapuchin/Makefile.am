@@ -28,12 +28,17 @@ libcapuchin_sources = \
 	Compression/TarExtracter.cs \
 	Verification/ChecksumVerifier.cs \
 	Verification/GnuPGVerifier.cs \
-	Verification/IVerifier.cs 
+	Verification/IVerifier.cs \
+	Logging/DelayedTextWriter.cs \
+	Logging/FileSystem.cs \
+	Logging/Log.cs \
+	Logging/TeeTextWriter.cs
 
 REFERENCES =  \
 	-r:System \
 	-r:System.Xml \
 	-r:ICSharpCode.SharpZipLib \
+	-r:Mono.Posix \
 	$(NDESKDBUS_LIBS) \
 	$(GNOMEVFSSHARP_LIBS)
 

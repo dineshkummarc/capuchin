@@ -59,7 +59,7 @@ namespace Capuchin
 	    /// <param name="repository_url">URL to repository's XML file</param>
 		public AppObject(string repository_url)
 		{
-			Console.WriteLine("*** NewStuff init "+repository_url);
+			Logging.Log.Info("Creating AppObject for {0}", repository_url);
 			
             this.RepositoryURL = repository_url;
 			this.LocalRepo = Path.Combine(Globals.Instance.LOCAL_CACHE_DIR, Path.GetFileName(repository_url));
@@ -94,11 +94,11 @@ namespace Capuchin
         /// <param name="force_update">Force downloading reository's XML file</param>
 		public void Refresh(bool force_update)
 		{
-			Console.WriteLine("*** Refreshing");			
+			Logging.Log.Info("Refreshing");			
 			
 			if (force_update || !this.IsCacheUpToDate())
 			{
-				Console.WriteLine("*** Downloading XML file");
+				Logging.Log.Info("Downloading XML file from {0}", this.RepositoryURL);
 				File.Delete( this.LocalRepo );
 				using (WebClient wc = new WebClient())
 				{
@@ -106,7 +106,7 @@ namespace Capuchin
 				}
 			}
 			
-			Console.WriteLine("*** Deserializing");
+			Logging.Log.Info("Deserializing XML file");
 			XmlSerializer ser = new XmlSerializer(typeof(Repository));
 			
 			FileStream repo_stream = new FileStream( this.LocalRepo, FileMode.Open );
@@ -130,7 +130,7 @@ namespace Capuchin
 		/// </returns>
     	public string[][] GetAvailablePlugins()
     	{
-    		Console.WriteLine("*** Getting available Stuff");
+    		Logging.Log.Info("Getting available plugins");
     		
     		string[][] stuff = new string[this.RepoItems.Count][];
     		int c=0;
@@ -152,7 +152,7 @@ namespace Capuchin
     	/// First element is the plugin's ID, second its description</returns>
     	public string[][] GetAvailableUpdates(string[][] plugins)
     	{
-            Console.WriteLine("*** Getting updates");
+            Logging.Log.Info("Getting updates");
             
             List<string[]> updates = new List<string[]>();
     	    foreach (string[] p in plugins) {
@@ -176,7 +176,7 @@ namespace Capuchin
 		{
 		    if (!this.RepoItems.ContainsKey(plugin_id))
 		        return;
-			Console.WriteLine("*** Updating {0}", plugin_id);
+			Logging.Log.Info("Updating plugin with id '{0}'", plugin_id);
 			
 			int dlid = Globals.DLM.DownloadFile(this.RepoItems[plugin_id].Url, this.InstallPath, this.RepoItems[plugin_id].Signature, this.RepoItems[plugin_id].Checksum);
 			
@@ -188,7 +188,7 @@ namespace Capuchin
 		/// <returns>An array of tags</returns>
     	public string[] GetTags(string plugin_id)
     	{
-            Console.WriteLine("*** Getting tags for {0}", plugin_id);
+            Logging.Log.Info("Getting tags for plugin with id '{0}'", plugin_id);
             string[] tags = this.RepoItems[plugin_id].Tags;
             return (tags == null) ? new string[] {""} : tags;
     	}
@@ -198,14 +198,14 @@ namespace Capuchin
     	/// <returns>Dictionary with keys "name" and "email"</returns>
     	public IDictionary<string, string> GetAuthor(string plugin_id)
     	{
-            Console.WriteLine("*** Getting author for {0}", plugin_id);
+            Logging.Log.Info("Getting author of plugin with id '{0}'", plugin_id);
             return this.RepoItems[plugin_id].Author;
     	}
     	
     	/// <summary>Tell the NewStuff object that it isn't needed anymore</summary>
     	public void Close()
     	{
-    		Console.WriteLine("*** Closing");
+    		Logging.Log.Info("Closing");
     		this.OnClosed();
     	}
     	
@@ -221,7 +221,7 @@ namespace Capuchin
                 ChecksumVerifier cv = new ChecksumVerifier( fs, checksumField );
                 fs.Close();
                 
-                Console.WriteLine("*** Checksum valid: {0}", cv.IsValid);
+                Logging.Log.Info("Checksum valid: {0}", cv.IsValid);
                 if (!cv.IsValid)
                 {
                     // Checksum is invalid
@@ -234,7 +234,7 @@ namespace Capuchin
             {
                 GnuPGVerifier gv = new GnuPGVerifier(local_file, signature);
                 
-                Console.WriteLine("*** Signature valid: {0}", gv.IsValid);
+                Logging.Log.Info("Signature valid: {0}", gv.IsValid);
                 if (!gv.IsValid)
                 {
                     // Signature invalid
@@ -317,7 +317,7 @@ namespace Capuchin
             	this.OnDownloadStatus("Extracting", -1.0);
             	Thread.Sleep(SLEEP_TIME);
             }
-			Console.WriteLine("*** Updated {0}", plugin_id);
+			Logging.Log.Info("Updated plugin with id '{0}'", plugin_id);
 			this.OnUpdated(plugin_id);
 			this.DownloadToPluginId.Remove(dlid);
     	}
