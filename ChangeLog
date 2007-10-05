@@ -1,3 +1,21 @@
+2007-10-05	Sebastian Pölsterl	<sebp@cvs.gnome.org>
+
+    * doc/repository.rng:
+    Added RelaxNG schema definition
+
+2007-10-05	Sebastian Pölsterl	<sebp@cvs.gnome.org>
+
+    * configure.ac
+    * Makefile.am
+    * specs/
+    * src/libcapuchin/Repository.cs
+    * src/libcapuchin/ConfParser.cs
+    * src/libcapuchin/Makefile.am
+    * src/libcapuchin/AppObject.cs
+    * src/libcapuchin/Capuchin.cs:
+    Get rid of specs file.
+    Added force_update parameter to Refresh()
+
 2007-10-01	Sebastian Pölsterl	<sebp@cvs.gnome.org>
 
     Renamed project to Capuchin

@@ -15,7 +15,6 @@ libcapuchin_sources = \
 	Capuchin.cs \
 	Repository.cs \
 	AppObject.cs \
-	ConfParser.cs \
 	Download.cs \
 	DownloadManager.cs \
 	Downloaders/AbstractDownloader.cs \

@@ -5,8 +5,18 @@ using System.Xml.Serialization;
 
 namespace Capuchin
 {
-    
-    [XmlRootAttribute(ElementName="items", Namespace = "", IsNullable = false)]
+	[XmlRootAttribute(ElementName="repository", Namespace="", IsNullable=false)]
+    public class Repository
+	{
+        public string application;
+        
+        [XmlElementAttribute("installpath")]
+        public string installpath;
+        
+        [XmlElementAttribute("items")]
+        public ItemsDict items;
+    }
+	
     public class ItemsDict : Dictionary<string, item>, IXmlSerializable
     {
         public System.Xml.Schema.XmlSchema GetSchema()

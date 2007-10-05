@@ -3,23 +3,23 @@ using System.Collections.Generic;
 using System.Threading;
 using NDesk.DBus;
 
-[Interface("org.gnome.NewStuffManager")]
-public interface INewStuffManager
+[Interface("org.gnome.Capuchin")]
+public interface ICapuchin
 {
-	ObjectPath GetNewStuff(string application_name);
+	ObjectPath GetAppObject(string application_name);
 }
 
 public delegate void UpdatedHandler(string plugin_id);
 public delegate void DownloadStatusHandler(string action, double progress);
-[Interface("org.gnome.NewStuffManager.NewStuff")]
+[Interface("org.gnome.Capuchin.AppObject")]
 public interface INewStuff
 {
 	event UpdatedHandler Updated;
 	event DownloadStatusHandler DownloadStatus;
 	
 	void Update(string plugin_id);    	
-	void Refresh();
-	string[][] GetAvailableNewStuff();
+	void Refresh(bool force_update);
+	string[][] GetAvailablePlugins();
 	string[][] GetAvailableUpdates(string[][] plugins);
 	string[] GetTags(string plugin_id);
 	IDictionary<string, string> GetAuthor(string plugin_id);
@@ -28,22 +28,22 @@ public interface INewStuff
 
 public class TestNSM
 {
-	protected const string NEW_STUFF_SERVICE = "org.gnome.NewStuffManager";
-	protected const string NEW_STUFF_MANAGER_PATH = "/org/gnome/NewStuffManager";
+	protected const string NEW_STUFF_SERVICE = "org.gnome.Capuchin";
+	protected const string NEW_STUFF_MANAGER_PATH = "/org/gnome/Capuchin";
 	
-	protected INewStuffManager stuffmanager;
+	protected ICapuchin stuffmanager;
 	protected INewStuff newstuff;
 	
 	public TestNSM()
 	{
 		Bus bus = Bus.Session;
 		
-		this.stuffmanager = bus.GetObject<INewStuffManager> (NEW_STUFF_SERVICE, new ObjectPath (NEW_STUFF_MANAGER_PATH)); 
+		this.stuffmanager = bus.GetObject<ICapuchin> (NEW_STUFF_SERVICE, new ObjectPath (NEW_STUFF_MANAGER_PATH)); 
 	}
 	
 	public void testGetNewStuff()
 	{
-		ObjectPath path = this.stuffmanager.GetNewStuff ("deskbarapplet");
+		ObjectPath path = this.stuffmanager.GetAppObject ("http://www.k-d-w.org/clipboard/deskbar/deskbar.xml");
 		
 		Bus bus = Bus.Session;
 		
@@ -64,12 +64,12 @@ public class TestNSM
 	
 	public void testRefresh()
 	{
-		this.newstuff.Refresh();
+		this.newstuff.Refresh(false);
 	}
 	
 	public void testGetAvailableNewStuff()
 	{
-		string[][] stuff = this.newstuff.GetAvailableNewStuff();
+		string[][] stuff = this.newstuff.GetAvailablePlugins();
 		Console.WriteLine ("ALL:");
 		foreach (string[] s in stuff)
 		{

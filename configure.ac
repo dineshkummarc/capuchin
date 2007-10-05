@@ -89,7 +89,6 @@ data/Makefile
 dbus-sharp/Makefile
 examples/Makefile
 capuchin-sharp.pc
-specs/Makefile
 src/Makefile
 src/libcapuchin/Makefile
 src/libcapuchin/Globals.cs
