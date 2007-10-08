@@ -2,6 +2,7 @@
 using System;
 using System.IO;
 using System.Net;
+using System.Diagnostics;
 
 namespace Capuchin.Downloaders
 {
@@ -14,6 +15,9 @@ namespace Capuchin.Downloaders
 	
 		internal override void Download(object startPoint)
 		{
+			// Measure how long the download took
+            Stopwatch timer = new Stopwatch();
+                
 			// TODO: HTTP rfc says that max 2 connections to a server are allowed
             try {
             	int startPointInt = Convert.ToInt32(startPoint);
@@ -43,15 +47,22 @@ namespace Capuchin.Downloaders
                 byte[] downBuffer = new byte[ BUFFER_SIZE ];
 
                 // Loop through the buffer until the buffer is empty
-                while ((bytesSize = strResponse.Read(downBuffer, 0, downBuffer.Length)) > 0)
+                timer.Start();
+                while ( (bytesSize = strResponse.Read(downBuffer, 0, downBuffer.Length)) > 0 )
                 {
                     // Write the data from the buffer to the local hard drive
                     strLocal.Write(downBuffer, 0, bytesSize);
+					
+					// Compute download progress
+                    double progress = (double)strLocal.Length/(fileSize + startPointInt);
+					// Compute download speed
+                    int speed = (int)( strLocal.Length / (timer.ElapsedMilliseconds / 1000.0) );
                     // Invoke the method that updates the form's label and progress bar
-                    base.OnStatus( (double)strLocal.Length/(fileSize + startPointInt) );
+                    base.OnStatus( progress, speed );
                 }
                 
             } finally {
+				timer.Stop();
                 strLocal.Close();
                 strResponse.Close();
                 webResponse.Close();

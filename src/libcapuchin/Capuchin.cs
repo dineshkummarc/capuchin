@@ -60,7 +60,7 @@ namespace Capuchin
     	{
     	   if (!Directory.Exists(Globals.Instance.LOCAL_CACHE_DIR))
 	       {
-               Logging.Log.Debug("Creating cache directory");
+               Logging.Log.Debug("Creating directory {0}", Globals.Instance.LOCAL_CACHE_DIR);
 	           Directory.CreateDirectory(Globals.Instance.LOCAL_CACHE_DIR);
 	       }
 	    }

@@ -1,3 +1,21 @@
+2007-10-08	Sebastian Pölsterl	<sebp@cvs.gnome.org>
+
+	* examples/testapp.cs:
+	* src/libcapuchin/Capuchin.cs:
+	* src/libcapuchin/DownloadManager.cs:
+	* src/libcapuchin/AppObject.cs:
+	* src/libcapuchin/Downloaders/AbstractDownloader.cs:
+	* src/libcapuchin/Downloaders/HttpDownlaoder.cs:
+	* src/libcapuchin/Downloaders/FtpDownloader.cs:
+	Renamed DownloadStatus signal to InstallationStatus.
+	It contains plugin id, action, progress and speed.
+	Implemented measurement of download speed for HTTP downloads.	
+	
+2007-10-08	Sebastian Pölsterl	<sebp@cvs.gnome.org>
+
+	* src/capuchin/Main.cs:
+	Createa .capuchin dir before initializing logging
+
 2007-10-05	Sebastian Pölsterl	<sebp@cvs.gnome.org>
 
     * src/libcapuchin/Logging/

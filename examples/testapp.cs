@@ -3,42 +3,19 @@ using System.Collections.Generic;
 using System.Threading;
 using NDesk.DBus;
 
-[Interface("org.gnome.Capuchin")]
-public interface ICapuchin
-{
-	ObjectPath GetAppObject(string application_name);
-}
-
-public delegate void UpdatedHandler(string plugin_id);
-public delegate void DownloadStatusHandler(string action, double progress);
-[Interface("org.gnome.Capuchin.AppObject")]
-public interface INewStuff
-{
-	event UpdatedHandler Updated;
-	event DownloadStatusHandler DownloadStatus;
-	
-	void Update(string plugin_id);    	
-	void Refresh(bool force_update);
-	string[][] GetAvailablePlugins();
-	string[][] GetAvailableUpdates(string[][] plugins);
-	string[] GetTags(string plugin_id);
-	IDictionary<string, string> GetAuthor(string plugin_id);
-	void Close();
-}
-
 public class TestNSM
 {
-	protected const string NEW_STUFF_SERVICE = "org.gnome.Capuchin";
-	protected const string NEW_STUFF_MANAGER_PATH = "/org/gnome/Capuchin";
+	protected const string CAPUCHIN_SERVICE = "org.gnome.Capuchin";
+	protected const string CAPUCHIN_PATH = "/org/gnome/Capuchin";
 	
-	protected ICapuchin stuffmanager;
-	protected INewStuff newstuff;
+	protected Capuchin.ICapuchin stuffmanager;
+	protected Capuchin.IAppObject newstuff;
 	
 	public TestNSM()
 	{
 		Bus bus = Bus.Session;
 		
-		this.stuffmanager = bus.GetObject<ICapuchin> (NEW_STUFF_SERVICE, new ObjectPath (NEW_STUFF_MANAGER_PATH)); 
+		this.stuffmanager = bus.GetObject<Capuchin.ICapuchin> (CAPUCHIN_SERVICE, new ObjectPath (CAPUCHIN_PATH)); 
 	}
 	
 	public void testGetNewStuff()
@@ -47,9 +24,9 @@ public class TestNSM
 		
 		Bus bus = Bus.Session;
 		
-		this.newstuff = bus.GetObject<INewStuff> (NEW_STUFF_SERVICE, path);
-		this.newstuff.Updated += new UpdatedHandler ( this.OnNewStuffUpdated );
-		this.newstuff.DownloadStatus += new DownloadStatusHandler ( this.OnDownloadStatus );
+		this.newstuff = bus.GetObject<Capuchin.IAppObject> (CAPUCHIN_SERVICE, path);
+		this.newstuff.Updated += new Capuchin.UpdatedHandler ( this.OnNewStuffUpdated );
+		this.newstuff.InstallationStatus += new Capuchin.InstallationStatusHandler ( this.OnDownloadStatus );
 	}
 	
 	protected void OnNewStuffUpdated(string plugin_id)
@@ -57,9 +34,9 @@ public class TestNSM
 		Console.WriteLine ("NewStuff updated: {0}", plugin_id);
 	}
 	
-	protected void OnDownloadStatus(string action, double progress)
+	protected void OnDownloadStatus(string plugin_id, string action, double progress, int speed)
 	{
-		Console.WriteLine ("DOWNLOAD: {0} {1}", action, progress);
+		Console.WriteLine ("DOWNLOAD: {0} {1} {2} {3}", plugin_id, action, progress, speed);
 	}
 	
 	public void testRefresh()

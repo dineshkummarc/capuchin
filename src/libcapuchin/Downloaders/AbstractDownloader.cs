@@ -7,13 +7,14 @@ using System.Threading;
 namespace Capuchin.Downloaders
 {
 	
-	internal delegate void StatusHandler(int id, double progress);
+	internal delegate void StatusHandler(int id, double progress, int speed);
 	internal delegate void FinishedHandler(int id);
     
     /// <summary>Abstract base class to download a file</summary>
 	internal abstract class AbstractDownloader : IDisposable
 	{
-        protected const int BUFFER_SIZE = 2048;
+        protected const int BUFFER_SIZE = 4096;
+		
 	    private bool disposed = false;	    
 	    
 		protected Download dl;
@@ -65,9 +66,9 @@ namespace Capuchin.Downloaders
 		
 		/// <summary>Emits status signal</summary>
 		/// <param name="progress">The progress of the current operation (0.0 to 1.0)</param>
-		protected void OnStatus(double progress) {
+		protected void OnStatus(double progress, int speed) {
             if (Status != null) {
-                Status(this.Id, progress);
+                Status(this.Id, progress, speed);
             }
 		}
 		

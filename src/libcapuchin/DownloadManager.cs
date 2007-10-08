@@ -9,7 +9,7 @@ using Capuchin.Downloaders;
 
 namespace Capuchin
 {
-	public delegate void DownloadManagerStatusHandler(int id, double progress);
+	public delegate void DownloadManagerStatusHandler(int id, double progress, int speed);
 	public delegate void DownloadManagerFinishedHandler(int id);
 	
 	[Interface("org.gnome.Capuchin.DownloadManager")]
@@ -116,11 +116,11 @@ namespace Capuchin
 			Console.WriteLine("*** Resuming download with id '{0}'", id);
     	}
     	
-    	protected void OnDownloadStatus(int id, double progress)
+    	protected void OnDownloadStatus(int id, double progress, int speed)
     	{
     		if (DownloadStatus != null)
     		{
-    			DownloadStatus(id, progress);
+    			DownloadStatus(id, progress, speed);
     		}
     	}
     	

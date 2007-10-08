@@ -1,6 +1,7 @@
 // project created on 17.12.2006 at 13:07
 using System;
 using System.Threading;
+using System.IO;
 using Mono.GetOptions;
 using NDesk.DBus;
 using org.freedesktop.DBus;
@@ -27,6 +28,7 @@ class MainClass
 	public static void Main(string[] args)
 	{
 		opts.ProcessArgs(args);
+	    CreateConfigDirIfNotExists();
 		
         if (opts.debug)
         {
@@ -59,4 +61,14 @@ class MainClass
 			Console.WriteLine(e);
 		}
 	}
+	
+    private static void CreateConfigDirIfNotExists()
+	{
+	   if (!Directory.Exists(Capuchin.Globals.Instance.LOCAL_CONFIG_DIR))
+       {
+          Capuchin.Logging.Log.Debug("Creating directory {0}", Capuchin.Globals.Instance.LOCAL_CONFIG_DIR);
+           Directory.CreateDirectory(Capuchin.Globals.Instance.LOCAL_CONFIG_DIR);
+       }
+    }
+
 }

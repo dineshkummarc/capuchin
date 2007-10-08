@@ -54,7 +54,8 @@ namespace Capuchin.Downloaders
 					// Write the data from the buffer to the local hard drive
 					strLocal.Write(downBuffer, 0, bytesSize);
 					// Invoke the method that updates the form's label and progress bar
-					base.OnStatus( (double)strLocal.Length/(fileSize + startPointLong) );
+					// TODO: Implement speed information for FTP
+					base.OnStatus( (double)strLocal.Length/(fileSize + startPointLong), -1 );
 				}
 			} finally {                
                 base.strLocal.Close();
