@@ -1,3 +1,9 @@
+2007-10-16	Sebastian Pölsterl	<sebp@cvs.gnome.org>
+
+    * doc/repository.rng:
+    * src/libcapuchin/Repository.cs:
+    Added changelog element to XML schema
+
 2007-10-08	Sebastian Pölsterl	<sebp@cvs.gnome.org>
 
 	* examples/testapp.cs:
