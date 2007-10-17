@@ -6,39 +6,39 @@ using System.Diagnostics;
 
 namespace Capuchin.Downloaders
 {
-	
-	/// <summary>Download files over HTTP</summary>
-	internal class HttpDownloader : AbstractDownloader
-	{	
-		public HttpDownloader(int id, Download dl) 
-		 : base(id, dl) { }
-	
-		internal override void Download(object startPoint)
-		{
-			// Measure how long the download took
+    
+    /// <summary>Download files over HTTP</summary>
+    internal class HttpDownloader : AbstractDownloader
+    {    
+        public HttpDownloader(int id, Download dl) 
+         : base(id, dl) { }
+    
+        internal override void Download(object startPoint)
+        {
+            // Measure how long the download took
             Stopwatch timer = new Stopwatch();
                 
-			// TODO: HTTP rfc says that max 2 connections to a server are allowed
+            // TODO: HTTP rfc says that max 2 connections to a server are allowed
             try {
-            	int startPointInt = Convert.ToInt32(startPoint);
-            	HttpWebRequest webReq = (HttpWebRequest)WebRequest.Create( base.dl.Url );
-            	webReq.AddRange(startPointInt);
+                int startPointInt = Convert.ToInt32(startPoint);
+                HttpWebRequest webReq = (HttpWebRequest)WebRequest.Create( base.dl.Url );
+                webReq.AddRange(startPointInt);
             
-            	// Set default authentication for retrieving the file
-        		webReq.Credentials = CredentialCache.DefaultCredentials;                
+                // Set default authentication for retrieving the file
+                webReq.Credentials = CredentialCache.DefaultCredentials;                
                 // Retrieve the response from the server
                 webResponse = webReq.GetResponse();
-            	// Ask the server for the file size and store it
+                // Ask the server for the file size and store it
                 long fileSize = webResponse.ContentLength;
-            	// Open the URL for download
+                // Open the URL for download
                 strResponse = webResponse.GetResponseStream();
                 
                 // Create a new file stream where we will be saving the data (local drive)
                 if (startPointInt == 0)
                 {
-                	strLocal = new FileStream(base.dl.LocalFile, FileMode.Create, FileAccess.Write, FileShare.None);
+                    strLocal = new FileStream(base.dl.LocalFile, FileMode.Create, FileAccess.Write, FileShare.None);
                 } else {
-                	strLocal = new FileStream(base.dl.LocalFile, FileMode.Append, FileAccess.Write, FileShare.None);
+                    strLocal = new FileStream(base.dl.LocalFile, FileMode.Append, FileAccess.Write, FileShare.None);
                 }
                 
                 // It will store the current number of bytes we retrieved from the server
@@ -52,23 +52,23 @@ namespace Capuchin.Downloaders
                 {
                     // Write the data from the buffer to the local hard drive
                     strLocal.Write(downBuffer, 0, bytesSize);
-					
-					// Compute download progress
+                    
+                    // Compute download progress
                     double progress = (double)strLocal.Length/(fileSize + startPointInt);
-					// Compute download speed
+                    // Compute download speed
                     int speed = (int)( strLocal.Length / (timer.ElapsedMilliseconds / 1000.0) );
                     // Invoke the method that updates the form's label and progress bar
                     base.OnStatus( progress, speed );
                 }
                 
             } finally {
-				timer.Stop();
+                timer.Stop();
                 strLocal.Close();
                 strResponse.Close();
                 webResponse.Close();
             }
             // Let the world know that we're done            
             base.OnFinished();
-		}
-	}
+        }
+    }
 }
