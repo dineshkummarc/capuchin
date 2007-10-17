@@ -53,7 +53,9 @@ public class TestNSM
 		Console.WriteLine ("ALL:");
 		foreach (string[] s in stuff)
 		{
-			Console.WriteLine ("{0}, {1}, {2}", s[0], s[1], s[2]);
+			Console.WriteLine ("ID: " + s[0]);
+            Console.WriteLine ("Name: " + s[1]);
+            Console.WriteLine ("Description: " + this.newstuff.GetDescription(s[0]) );
 		}
 	}
 	
@@ -63,11 +65,12 @@ public class TestNSM
 		plugins[0] = new string[] {"leoorg.py", "0.2.0"};
 		plugins[1] = new string[] {"ssh.py", "0.0.9"};
 		
-		string[][] updates = this.newstuff.GetAvailableUpdates (plugins);
+		string[] updates = this.newstuff.GetAvailableUpdates (plugins);
 		Console.WriteLine ("UPDATES:");
-		foreach (string[] s in updates)
+		foreach (string s in updates)
 		{
-			Console.WriteLine ("{0}, {1}", s[0], s[1]);
+			Console.WriteLine (s);
+            Console.WriteLine ("Changes: " + this.newstuff.GetChanges(s, "1.1.0.0"));
 		}
 	}
 	

@@ -1,5 +1,13 @@
 2007-10-17	Sebastian Pölsterl	<sebp@cvs.gnome.org>
 
+    * examples/testapp.cs:
+    * src/libcapuchin/AppObject.cs:
+    GetAvailablePlugins returns just id and name for each plugin.
+    GetAvailableUpdates just returns a list of plugin ids.
+    Added GetAvailableUpdates and GetChanges methods.
+
+2007-10-17	Sebastian Pölsterl	<sebp@cvs.gnome.org>
+
     * examples/testapp.cs
     * src/libcapuchin/DownloadManager.cs
     * src/libcapuchin/AppObject.cs:

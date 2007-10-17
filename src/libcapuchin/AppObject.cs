@@ -32,7 +32,9 @@ namespace Capuchin
         void Update (bool force_update);
         void Install (string plugin_id);
         string[][] GetAvailablePlugins ();        
-        string[][] GetAvailableUpdates (string[][] plugins);        
+        string[] GetAvailableUpdates (string[][] plugins);
+        string GetDescription (string plugin_id);
+        string GetChanges (string plugin_id, string version);
         string[] GetTags (string plugin_id);        
         IDictionary<string, string> GetAuthor (string plugin_id);        
         void Close ();
@@ -140,8 +142,8 @@ namespace Capuchin
         
         /// <summary>Get all plugins from the repository</summary>
         /// <returns>
-        /// An array of string arrays of size 3.
-        /// Whereas the first element is the plugin's id, second the plugin's name and third the description.
+        /// An array of string arrays of size 2.
+        /// Whereas the first element is the plugin's id, second the plugin's name.
         /// </returns>
         public string[][] GetAvailablePlugins ()
         {
@@ -151,7 +153,7 @@ namespace Capuchin
             int c=0;
             foreach (string id in this.RepoItems.Keys)
             {
-                stuff[c] = new string[] { id, this.RepoItems[id].Name, this.RepoItems[id].Description };
+                stuff[c] = new string[] { id, this.RepoItems[id].Name };
                 c++;
             }
             
@@ -163,13 +165,12 @@ namespace Capuchin
         /// An array consisting of string arrays of size 2.
         /// The first element is the plugin's id and the second its version.
         /// </param>
-        /// <returns>An array of string arrays of size 2.
-        /// First element is the plugin's ID, second its description</returns>
-        public string[][] GetAvailableUpdates (string[][] plugins)
+        /// <returns>An array of strings containing plugin IDs</returns>
+        public string[] GetAvailableUpdates (string[][] plugins)
         {
             Logging.Log.Info("Getting updates");
             
-            List<string[]> updates = new List<string[]>();
+            List<string> updates = new List<string>();
             foreach (string[] p in plugins) {
                 string plugin_id = p[0];
                 if (!this.RepoItems.ContainsKey(plugin_id))
@@ -178,7 +179,7 @@ namespace Capuchin
                 string repo_version = this.RepoItems[plugin_id].Version;
                 if (AppObject.IsNewerVersion(repo_version, p[1]))
                 {
-                    updates.Add( new string[] {plugin_id, this.RepoItems[plugin_id].Description } );
+                    updates.Add (plugin_id);
                 }
             }
              
@@ -196,6 +197,27 @@ namespace Capuchin
             int dlid = Globals.DLM.DownloadFile(this.RepoItems[plugin_id].Url, this.InstallPath, this.RepoItems[plugin_id].Signature, this.RepoItems[plugin_id].Checksum);
             
             this.DownloadToPluginId.Add(dlid, plugin_id);
+        }
+        
+        /// <summary>
+        /// Get description for given <code>plugin_id</code>
+        /// </summary>
+        public string GetDescription (string plugin_id)
+        {
+            return this.RepoItems[plugin_id].Description;   
+        }
+        
+        /// <summary>
+        /// Get changes for plugin with given ID made in given version
+        /// </summary>
+        public string GetChanges (string plugin_id, string version)
+        {
+            if (this.RepoItems[plugin_id].Changelog.ContainsKey (version))
+            {
+                return this.RepoItems[plugin_id].Changelog[version];
+            } else {
+                return "";
+            }
         }
         
         /// <summary>Get tags for the plugin with ID <code>plugin_id</code></summary>
