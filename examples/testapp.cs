@@ -56,6 +56,8 @@ public class TestNSM
 			Console.WriteLine ("ID: " + s[0]);
             Console.WriteLine ("Name: " + s[1]);
             Console.WriteLine ("Description: " + this.newstuff.GetDescription(s[0]) );
+            IDictionary<string, string> author = this.newstuff.GetAuthor(s[0]);
+            Console.WriteLine ("Author: {0} <{1}>", author["name"], author["email"]);
 		}
 	}
 	
