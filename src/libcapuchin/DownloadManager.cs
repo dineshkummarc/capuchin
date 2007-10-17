@@ -5,7 +5,6 @@ using System.IO;
 using System.Threading;
 using NDesk.DBus;
 using org.freedesktop.DBus;
-using Capuchin.Downloaders;
 
 namespace Capuchin
 {
@@ -58,9 +57,9 @@ namespace Capuchin
 		{
 			Download dl = new Download(this.downloadsIndex, download_url, download_dest, signature, checksumField);
 			
-			AbstractDownloader downloader = this.GetDownloader(this.downloadsIndex, dl);
-            downloader.Status += new StatusHandler( this.OnDownloadStatus );
-            downloader.Finished += new FinishedHandler( this.DownloadFinishedCallback );
+			Downloaders.AbstractDownloader downloader = this.GetDownloader(this.downloadsIndex, dl);
+            downloader.Status += new Downloaders.StatusHandler( this.OnDownloadStatus );
+            downloader.Finished += new Downloaders.FinishedHandler( this.DownloadFinishedCallback );
             
             Thread downloaderThread = new Thread( new ThreadStart(downloader.Download) );
             dl.Downloader = downloaderThread;
@@ -100,9 +99,10 @@ namespace Capuchin
     		// Get file info
     		FileInfo f = new FileInfo( this.Downloads[id].LocalFile );
     		// Get Downloader
-			AbstractDownloader downloader = this.GetDownloader(id, this.Downloads[id]);
-            downloader.Status += new StatusHandler( this.OnDownloadStatus );
-            downloader.Finished += new FinishedHandler( this.DownloadFinishedCallback );
+			Downloaders.AbstractDownloader downloader = this.GetDownloader(id, this.Downloads[id]);
+			// FIXME: Do we really need to connect the signals again?
+            downloader.Status += new Downloaders.StatusHandler( this.OnDownloadStatus );
+            downloader.Finished += new Downloaders.FinishedHandler( this.DownloadFinishedCallback );
             // Start Thread
             Thread downloaderThread = new Thread( new ParameterizedThreadStart(downloader.Download) );
             this.Downloads[id] = new Download ( id,
@@ -142,15 +142,15 @@ namespace Capuchin
     	}
     	
     	/// <summary>Returns the appropriate <see cref="Nsm.Downloaders.AbstractDownloader" /></summary>
-    	internal AbstractDownloader GetDownloader(int id, Download dl)
+    	internal Downloaders.AbstractDownloader GetDownloader(int id, Download dl)
     	{
     		Uri uri = new Uri(dl.Url);
             
             if (uri.Scheme == "http")
             {
-            	return new HttpDownloader(id, dl);
+            	return new Downloaders.HttpDownloader(id, dl);
             } else if (uri.Scheme == "ftp") {
-            	return new FtpDownloader(id, dl);
+            	return new Downloaders.FtpDownloader(id, dl);
             } else {
             	throw new NotImplementedException("Scheme '"+ uri.Scheme + "' is not supported");            	
             }

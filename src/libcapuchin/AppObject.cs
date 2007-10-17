@@ -12,21 +12,30 @@ using Capuchin.Compression;
 
 namespace Capuchin
 {
-	public delegate void UpdatedHandler(string plugin_id);
-	public delegate void InstallationStatusHandler(string plugin_id, string action, double progress, int speed);    
+	public enum ActionType {
+		UpdatingRepo,
+		DownloadingPlugin,
+		ExtractingPlugin
+	}
+	
+	public delegate void UpdateFinishedHandler ();
+	public delegate void InstallFinishedHandler (string plugin_id);
+	public delegate void StatusHandler (ActionType action, string plugin_id, double progress, int speed);
 			
 	[Interface("org.gnome.Capuchin.AppObject")]
 	public interface IAppObject
 	{
-		event UpdatedHandler Updated;
-	    event InstallationStatusHandler InstallationStatus;
-		void Update(string plugin_id);
-        void Refresh(bool force_update);
-    	string[][] GetAvailablePlugins();    	
-    	string[][] GetAvailableUpdates(string[][] plugins);    	
-    	string[] GetTags(string plugin_id);    	
-    	IDictionary<string, string> GetAuthor(string plugin_id);    	
-    	void Close();
+        event UpdateFinishedHandler UpdateFinished;
+        event InstallFinishedHandler InstallFinished;
+        event StatusHandler Status;
+		
+        void Update (bool force_update);
+        void Install (string plugin_id);
+        string[][] GetAvailablePlugins ();    	
+        string[][] GetAvailableUpdates (string[][] plugins);    	
+        string[] GetTags (string plugin_id);    	
+        IDictionary<string, string> GetAuthor (string plugin_id);    	
+        void Close ();
 	}
 	
 	public class RepositoryConnectionException : ApplicationException
@@ -39,8 +48,9 @@ namespace Capuchin
 	/// <summary>An application specific object that handels the plugins</summary>
 	public class AppObject : IDisposable,IAppObject
 	{
-	    public event UpdatedHandler Updated;
-	    public event InstallationStatusHandler InstallationStatus;
+		public event UpdateFinishedHandler UpdateFinished;
+	    public event InstallFinishedHandler InstallFinished;
+	    public event StatusHandler Status;
 	    
 	    internal delegate void ClosedHandler(string application_name);
 	    internal event ClosedHandler Closed;
@@ -54,9 +64,10 @@ namespace Capuchin
 	    
 		private const int SLEEP_TIME = 500;
 	    private bool disposed = false;
+		private int repo_dlid = -1; 
 	    
 	    /// <param name="repository_url">URL to repository's XML file</param>
-		public AppObject(string repository_url)
+		public AppObject (string repository_url)
 		{
 			Logging.Log.Info("Creating AppObject for {0}", repository_url);
 			
@@ -67,12 +78,10 @@ namespace Capuchin
 			
             // Forward DownloadStatus event
 			Globals.DLM.DownloadStatus += new DownloadManagerStatusHandler(
-				delegate (int dlid, double p, int s) {
-                    this.OnInstallationStatus( this.DownloadToPluginId[dlid], "Downloading", p, s);
-                }
+                    this.OnDownloadStatus
 			);
 			Globals.DLM.DownloadFinished += new DownloadManagerFinishedHandler(
-				this.DownloadFinishedCallback
+				this.OnDownloadFinished
 			);
 		}
             
@@ -93,7 +102,7 @@ namespace Capuchin
 		
 		/// <summary>Load the repository</summary>
         /// <param name="force_update">Force downloading reository's XML file</param>
-		public void Refresh(bool force_update)
+		public void Update (bool force_update)
 		{
 			Logging.Log.Info("Refreshing");			
 			
@@ -101,12 +110,15 @@ namespace Capuchin
 			{
 				Logging.Log.Info("Downloading XML file from {0}", this.RepositoryURL);
 				File.Delete( this.LocalRepo );
-				using (WebClient wc = new WebClient())
-				{
-					wc.DownloadFile( this.RepositoryURL, this.LocalRepo );
-				}
+				
+				this.repo_dlid = Globals.DLM.DownloadFile (this.RepositoryURL, Globals.Instance.LOCAL_CACHE_DIR);
+			} else {
+				this.LoadRepository ();
 			}
-			
+		}
+		
+		protected void LoadRepository ()
+		{
 			Logging.Log.Info("Deserializing XML file");
 			XmlSerializer ser = new XmlSerializer(typeof(Repository));
 			
@@ -122,6 +134,8 @@ namespace Capuchin
 		    reader.Close();
 			this.RepoItems = repo.items;
 			this.InstallPath = ExpandPath(repo.installpath);
+			
+			this.OnUpdateFinished();
 		}
 		
 		/// <summary>Get all plugins from the repository</summary>
@@ -129,7 +143,7 @@ namespace Capuchin
 		/// An array of string arrays of size 3.
 		/// Whereas the first element is the plugin's id, second the plugin's name and third the description.
 		/// </returns>
-    	public string[][] GetAvailablePlugins()
+    	public string[][] GetAvailablePlugins ()
     	{
     		Logging.Log.Info("Getting available plugins");
     		
@@ -151,7 +165,7 @@ namespace Capuchin
     	/// </param>
     	/// <returns>An array of string arrays of size 2.
     	/// First element is the plugin's ID, second its description</returns>
-    	public string[][] GetAvailableUpdates(string[][] plugins)
+    	public string[][] GetAvailableUpdates (string[][] plugins)
     	{
             Logging.Log.Info("Getting updates");
             
@@ -173,7 +187,7 @@ namespace Capuchin
     	
     	/// <summary>Update the plugin with ID <code>plugin_id</code></summary>
     	/// <param name="plugin_id">Plugin's ID</param>
-		public void Update(string plugin_id)
+		public void Install (string plugin_id)
 		{
 		    if (!this.RepoItems.ContainsKey(plugin_id))
 		        return;
@@ -187,7 +201,7 @@ namespace Capuchin
 		/// <summary>Get tags for the plugin with ID <code>plugin_id</code></summary>
 		/// <param name="plugin_id">Plugin's ID</param>
 		/// <returns>An array of tags</returns>
-    	public string[] GetTags(string plugin_id)
+    	public string[] GetTags (string plugin_id)
     	{
             Logging.Log.Info("Getting tags for plugin with id '{0}'", plugin_id);
             string[] tags = this.RepoItems[plugin_id].Tags;
@@ -197,7 +211,7 @@ namespace Capuchin
     	/// <summary>Get the author's name and e-mail address for the plugin with ID <code>plugin_id</code></summary>
     	/// <param name="plugin_id">Plugin's ID</param>
     	/// <returns>Dictionary with keys "name" and "email"</returns>
-    	public IDictionary<string, string> GetAuthor(string plugin_id)
+    	public IDictionary<string, string> GetAuthor (string plugin_id)
     	{
             Logging.Log.Info("Getting author of plugin with id '{0}'", plugin_id);
             return this.RepoItems[plugin_id].Author;
@@ -214,7 +228,7 @@ namespace Capuchin
     	/// <param name="local_file">Path to the downloaded file</param>
     	/// <param name="signature">URL of the signature file</param>
     	/// <param name="checksumField">Checksum information</param>
-    	protected void CheckFile(string local_file, string signature, checksum checksumField)
+    	protected void CheckFile (string local_file, string signature, checksum checksumField)
     	{
     		if (checksumField != null)
             {
@@ -247,7 +261,7 @@ namespace Capuchin
          
         /// <summary>Extract file</summary>
         /// <param name="dlobject">A <see cref="Download" /> instance</param>   
-		protected void ExtractFile(object local_file_obj)
+		protected void ExtractFile (object local_file_obj)
     	{   
     		string local_file = (string)local_file_obj;
             Decompresser decomp = new Decompresser(local_file, this.InstallPath);
@@ -257,23 +271,31 @@ namespace Capuchin
                 File.Delete(local_file);
     	}
     	
-        protected void OnUpdated(string id)
-        {
-        	if (Updated != null)
+		protected void OnUpdateFinished ()
+		{
+			if (UpdateFinished != null)
 			{
-				Updated( id );			
+				UpdateFinished ();
+			}
+		}
+		
+        protected void OnInstallFinished (string id)
+        {
+        	if (InstallFinished != null)
+			{
+				InstallFinished( id );			
 			}
         }
         
-        protected void OnInstallationStatus(string plugin_id, string action, double progress, int speed)
+        protected void OnStatus (ActionType action, string plugin_id, double progress, int speed)
         {
-        	if (InstallationStatus != null)
+        	if (Status != null)
 			{
-				InstallationStatus( plugin_id, action, progress, speed);
+				Status (action, plugin_id, progress, speed);
 			}
         }
         
-        protected void OnClosed()
+        protected void OnClosed ()
 		{
 	        if (Closed != null)
 	        {
@@ -285,7 +307,7 @@ namespace Capuchin
     	/// <exception cref="Nsm.RepositoryConnectionException">
     	/// Thrown if connection to repository failed
     	/// </exception>
-    	private bool IsCacheUpToDate()
+    	private bool IsCacheUpToDate ()
     	{
     		if (!File.Exists(this.LocalRepo))
     			return false;
@@ -300,9 +322,24 @@ namespace Capuchin
         		throw new RepositoryConnectionException("Connection to repository "+this.RepositoryURL+" failed", e);
         	}
     	}
+			
+		private void OnDownloadStatus (int dlid, double progress, int speed)
+		{
+			if (dlid == this.repo_dlid)
+			{
+				this.OnStatus (ActionType.UpdatingRepo, "", progress, speed);
+			} else {
+				this.OnStatus (ActionType.DownloadingPlugin, this.DownloadToPluginId[dlid], progress, speed);
+			}
+		}
     	
-    	private void DownloadFinishedCallback(int dlid)
+    	private void OnDownloadFinished (int dlid)
     	{
+			if (dlid == this.repo_dlid) {
+				this.LoadRepository();
+				return;
+			}
+				
     		string plugin_id = this.DownloadToPluginId[dlid];
     		string local_file = Path.Combine( this.InstallPath, Path.GetFileName(this.RepoItems[plugin_id].Url) );
     	
@@ -314,16 +351,16 @@ namespace Capuchin
 			extractThread.Start( local_file );			
 			while (extractThread.IsAlive)
             {
-            	this.OnInstallationStatus(plugin_id, "Extracting", -1.0, -1);
+            	this.OnStatus( ActionType.ExtractingPlugin, plugin_id, -1.0, -1);
             	Thread.Sleep(SLEEP_TIME);
             }
 			Logging.Log.Info("Updated plugin with id '{0}'", plugin_id);
-			this.OnUpdated(plugin_id);
+			this.OnInstallFinished(plugin_id);
 			this.DownloadToPluginId.Remove(dlid);
     	}
     	
     	/// <summary>Check whether first argument is newer as second one</summary>
-    	private static bool IsNewerVersion(string version_new, string version_old)
+    	private static bool IsNewerVersion (string version_new, string version_old)
         {
         	int[] new_arr = AppObject.ConvertVersionStringToIntArray(version_new);
         	int[] old_arr = AppObject.ConvertVersionStringToIntArray(version_old);
@@ -342,7 +379,7 @@ namespace Capuchin
         }
         
         /// <summary>Convert a version string to an int array</summary>
-        private static int[] ConvertVersionStringToIntArray(string version)
+        private static int[] ConvertVersionStringToIntArray (string version)
         {
         	string[] string_arr = version.Split(new char[] {'.'});
         	int[] int_arr = new int[string_arr.Length];
@@ -353,7 +390,7 @@ namespace Capuchin
         	return int_arr;
         }        
         
-        private static string ExpandPath(string path)
+        private static string ExpandPath (string path)
         {
             if (path.StartsWith("~"))
             {

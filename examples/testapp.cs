@@ -11,6 +11,8 @@ public class TestNSM
 	protected Capuchin.ICapuchin stuffmanager;
 	protected Capuchin.IAppObject newstuff;
 	
+	private static TestNSM test = new TestNSM();
+	
 	public TestNSM()
 	{
 		Bus bus = Bus.Session;
@@ -25,8 +27,9 @@ public class TestNSM
 		Bus bus = Bus.Session;
 		
 		this.newstuff = bus.GetObject<Capuchin.IAppObject> (CAPUCHIN_SERVICE, path);
-		this.newstuff.Updated += new Capuchin.UpdatedHandler ( this.OnNewStuffUpdated );
-		this.newstuff.InstallationStatus += new Capuchin.InstallationStatusHandler ( this.OnDownloadStatus );
+		this.newstuff.InstallFinished += new Capuchin.InstallFinishedHandler ( this.OnNewStuffUpdated );
+		this.newstuff.Status += new Capuchin.StatusHandler ( this.OnStatus );
+		this.newstuff.UpdateFinished += new Capuchin.UpdateFinishedHandler ( delegate () { ContinueMain(); } );
 	}
 	
 	protected void OnNewStuffUpdated(string plugin_id)
@@ -34,14 +37,14 @@ public class TestNSM
 		Console.WriteLine ("NewStuff updated: {0}", plugin_id);
 	}
 	
-	protected void OnDownloadStatus(string plugin_id, string action, double progress, int speed)
+	protected void OnStatus(Capuchin.ActionType action, string plugin_id, double progress, int speed)
 	{
-		Console.WriteLine ("DOWNLOAD: {0} {1} {2} {3}", plugin_id, action, progress, speed);
+		Console.WriteLine ("DOWNLOAD: {0} {1} {2} {3}", action, plugin_id, progress, speed);
 	}
 	
 	public void testRefresh()
 	{
-		this.newstuff.Refresh(false);
+		this.newstuff.Update(false);
 	}
 	
 	public void testGetAvailableNewStuff()
@@ -86,7 +89,7 @@ public class TestNSM
 	
 	public void testUpdate()
 	{
-		this.newstuff.Update("leoorg.py");
+		this.newstuff.Install("leoorg.py");
 	}
 	
 	public void testClose()
@@ -94,11 +97,8 @@ public class TestNSM
 		this.newstuff.Close();
 	}
 	
-	public static void Main (string[] args)
+	public static void ContinueMain()
 	{
-		TestNSM test = new TestNSM();
-		test.testGetNewStuff();
-		test.testRefresh();
 		test.testGetAvailableNewStuff();
 		test.testGetAvailableUpdates();
 		test.testGetTags();
@@ -106,5 +106,12 @@ public class TestNSM
 		test.testUpdate();
 		Thread.Sleep(5000); // Wait 5s for update to complete, because we have no mainloop
 		test.testClose();
+	}
+	
+	public static void Main (string[] args)
+	{
+		test.testGetNewStuff();
+		test.testRefresh();
+		Thread.Sleep(5000); // Wait 5s for update to complete, because we have no mainloop
 	}
 }

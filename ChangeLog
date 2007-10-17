@@ -1,3 +1,15 @@
+2007-10-17	Sebastian Pölsterl	<sebp@cvs.gnome.org>
+
+    * examples/testapp.cs
+    * src/libcapuchin/DownloadManager.cs
+    * src/libcapuchin/AppObject.cs:
+    Show download status when downloading repository's XML file
+    Changed name of Refresh method to Update
+    Changed name of Update method to Install
+    Changed name of event Updated to InstallFinished
+    Changed name of event InstallationStatus to Status and changed its parameters
+    Added ActionType enum
+
 2007-10-16	Sebastian Pölsterl	<sebp@cvs.gnome.org>
 
     * doc/repository.rng:
