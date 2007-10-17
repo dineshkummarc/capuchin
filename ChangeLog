@@ -1,5 +1,10 @@
 2007-10-17	Sebastian Pölsterl	<sebp@cvs.gnome.org>
 
+   * src/libcapuchin/AppObject.cs:
+   Added GetApplicationName method
+
+2007-10-17	Sebastian Pölsterl	<sebp@cvs.gnome.org>
+
     * examples/testapp.cs:
     * src/libcapuchin/AppObject.cs:
     GetAvailablePlugins returns just id and name for each plugin.

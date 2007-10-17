@@ -29,6 +29,7 @@ namespace Capuchin
         event InstallFinishedHandler InstallFinished;
         event StatusHandler Status;
         
+        string GetApplicationName ();
         void Update (bool force_update);
         void Install (string plugin_id);
         string[][] GetAvailablePlugins ();        
@@ -63,6 +64,7 @@ namespace Capuchin
         protected string LocalRepo;
         protected string InstallPath;
         protected IDictionary<int, string> DownloadToPluginId;
+        protected string ApplicationName;
         
         private const int SLEEP_TIME = 500;
         private bool disposed = false;
@@ -136,9 +138,15 @@ namespace Capuchin
             reader.Close();
             this.RepoItems = repo.items;
             this.InstallPath = ExpandPath(repo.installpath);
+            this.ApplicationName = repo.application;
             
             this.OnUpdateFinished();
         }
+        
+        public string GetApplicationName ()
+        {
+            return this.ApplicationName;
+        }       
         
         /// <summary>Get all plugins from the repository</summary>
         /// <returns>
