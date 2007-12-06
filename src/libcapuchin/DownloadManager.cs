@@ -5,6 +5,7 @@ using System.IO;
 using System.Threading;
 using NDesk.DBus;
 using org.freedesktop.DBus;
+using Capuchin.Logging;
 
 namespace Capuchin
 {
@@ -67,7 +68,7 @@ namespace Capuchin
             this.downloadsIndex++;
             downloaderThread.Start();
             
-            Console.WriteLine("*** Started downloading file with id '{0}'", this.downloadsIndex-1);
+            Log.Info("Started downloading file {0} to {1} with id '{2}'", download_url, download_dest, this.downloadsIndex-1);
             
             return (this.downloadsIndex-1);
         }
@@ -76,7 +77,7 @@ namespace Capuchin
         /// <param name="id">Download id as returned by <see cref="Nsm.DownloadManager.DownloadFile" /></param>
         public virtual void PauseDownload(int id)
         {
-            Console.WriteLine("*** Paused download with id '{0}'", id);
+            Log.Info("Paused download with id '{0}'", id);
             // Kill Downloader Thread
             this.Downloads[id].Downloader.Abort();
         }
@@ -85,7 +86,7 @@ namespace Capuchin
         /// <param name="id">Download id as returned by <see cref="Nsm.DownloadManager.DownloadFile" /></param>
         public virtual void AbortDownload(int id)
         {
-            Console.WriteLine("*** Aborted download with id '{0}'", id);
+            Log.Info("Aborted download with id '{0}'", id);
         
             this.PauseDownload(id);
             File.Delete(this.Downloads[id].LocalFile);
@@ -113,7 +114,7 @@ namespace Capuchin
                 downloaderThread);
             downloaderThread.Start(f.Length);
             
-            Console.WriteLine("*** Resuming download with id '{0}'", id);
+            Log.Info("Resuming download with id '{0}'", id);
         }
         
         protected void OnDownloadStatus(int id, double progress, int speed)
@@ -133,7 +134,7 @@ namespace Capuchin
             
         protected void DownloadFinishedCallback(int id)
         {
-            Console.WriteLine("*** Finished downloading file with id '{0}'", id);
+            Log.Info("Finished downloading file with id '{0}'", id);
             
             // Remove Download
             this.Downloads.Remove(id);
@@ -149,8 +150,8 @@ namespace Capuchin
             if (uri.Scheme == "http")
             {
                 return new Downloaders.HttpDownloader(id, dl);
-            } else if (uri.Scheme == "ftp") {
-                return new Downloaders.FtpDownloader(id, dl);
+//            } else if (uri.Scheme == "ftp") {
+//                return new Downloaders.FtpDownloader(id, dl);
             } else {
                 throw new NotImplementedException("Scheme '"+ uri.Scheme + "' is not supported");                
             }

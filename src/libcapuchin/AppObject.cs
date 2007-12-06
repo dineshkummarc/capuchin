@@ -9,6 +9,7 @@ using System.Threading;
 using NDesk.DBus;
 using Capuchin.Verification;
 using Capuchin.Compression;
+using Capuchin.Logging;
 
 namespace Capuchin
 {
@@ -73,8 +74,6 @@ namespace Capuchin
         /// <param name="repository_url">URL to repository's XML file</param>
         public AppObject (string repository_url)
         {
-            Logging.Log.Info("Creating AppObject for {0}", repository_url);
-            
             this.RepositoryURL = repository_url;
             this.LocalRepo = Path.Combine(Globals.Instance.LOCAL_CACHE_DIR, Path.GetFileName(repository_url));
             // Used to map DownloadId to PluginID
@@ -108,11 +107,11 @@ namespace Capuchin
         /// <param name="force_update">Force downloading reository's XML file</param>
         public void Update (bool force_update)
         {
-            Logging.Log.Info("Refreshing");            
+            Log.Info("Refreshing");            
             
             if (force_update || !this.IsCacheUpToDate())
             {
-                Logging.Log.Info("Downloading XML file from {0}", this.RepositoryURL);
+                Log.Info("Downloading XML file from {0}", this.RepositoryURL);
                 File.Delete( this.LocalRepo );
                 
                 this.repo_dlid = Globals.DLM.DownloadFile (this.RepositoryURL, Globals.Instance.LOCAL_CACHE_DIR);
@@ -123,7 +122,7 @@ namespace Capuchin
         
         protected void LoadRepository ()
         {
-            Logging.Log.Info("Deserializing XML file");
+            Log.Info("Deserializing XML file");
             XmlSerializer ser = new XmlSerializer(typeof(Repository));
             
             FileStream repo_stream = new FileStream( this.LocalRepo, FileMode.Open );
@@ -155,7 +154,7 @@ namespace Capuchin
         /// </returns>
         public string[][] GetAvailablePlugins ()
         {
-            Logging.Log.Info("Getting available plugins");
+            Log.Info("Getting available plugins");
             
             string[][] stuff = new string[this.RepoItems.Count][];
             int c=0;
@@ -176,7 +175,7 @@ namespace Capuchin
         /// <returns>An array of strings containing plugin IDs</returns>
         public string[] GetAvailableUpdates (string[][] plugins)
         {
-            Logging.Log.Info("Getting updates");
+            Log.Info("Getting updates");
             
             List<string> updates = new List<string>();
             foreach (string[] p in plugins) {
@@ -200,7 +199,7 @@ namespace Capuchin
         {
             if (!this.RepoItems.ContainsKey(plugin_id))
                 return;
-            Logging.Log.Info("Updating plugin with id '{0}'", plugin_id);
+            Log.Info("Updating plugin with id '{0}'", plugin_id);
             
             int dlid = Globals.DLM.DownloadFile(this.RepoItems[plugin_id].Url, this.InstallPath, this.RepoItems[plugin_id].Signature, this.RepoItems[plugin_id].Checksum);
             
@@ -233,7 +232,7 @@ namespace Capuchin
         /// <returns>An array of tags</returns>
         public string[] GetTags (string plugin_id)
         {
-            Logging.Log.Info("Getting tags for plugin with id '{0}'", plugin_id);
+            Log.Info("Getting tags for plugin with id '{0}'", plugin_id);
             string[] tags = this.RepoItems[plugin_id].Tags;
             return (tags == null) ? new string[] {""} : tags;
         }
@@ -243,14 +242,14 @@ namespace Capuchin
         /// <returns>Dictionary with keys "name" and "email"</returns>
         public IDictionary<string, string> GetAuthor (string plugin_id)
         {
-            Logging.Log.Info("Getting author of plugin with id '{0}'", plugin_id);
+            Log.Info("Getting author of plugin with id '{0}'", plugin_id);
             return this.RepoItems[plugin_id].Author;
         }
         
-        /// <summary>Tell the NewStuff object that it isn't needed anymore</summary>
+        /// <summary>Tell the object that it isn't needed anymore</summary>
         public void Close()
         {
-            Logging.Log.Info("Closing");
+            Log.Info("Closing object for {0}", this.ApplicationName);
             this.OnClosed();
         }
         
@@ -266,7 +265,7 @@ namespace Capuchin
                 ChecksumVerifier cv = new ChecksumVerifier( fs, checksumField );
                 fs.Close();
                 
-                Logging.Log.Info("Checksum valid: {0}", cv.IsValid);
+                Log.Info("Checksum valid for {0}: {1}", local_file, cv.IsValid);
                 if (!cv.IsValid)
                 {
                     // Checksum is invalid
@@ -279,7 +278,7 @@ namespace Capuchin
             {
                 GnuPGVerifier gv = new GnuPGVerifier(local_file, signature);
                 
-                Logging.Log.Info("Signature valid: {0}", gv.IsValid);
+                Log.Info("Signature valid for {0}: {1}", local_file, gv.IsValid);
                 if (!gv.IsValid)
                 {
                     // Signature invalid
@@ -294,10 +293,14 @@ namespace Capuchin
         protected void ExtractFile (object local_file_obj)
         {   
             string local_file = (string)local_file_obj;
+
+            Log.Info("Decompressing {0} to {1}", local_file, this.InstallPath);            
+            
             Decompresser decomp = new Decompresser(local_file, this.InstallPath);
             decomp.Run();
          
             if (decomp.DeleteFile)
+                Log.Info("Deleting archive {0}", local_file);
                 File.Delete(local_file);
         }
         
@@ -339,6 +342,8 @@ namespace Capuchin
         /// </exception>
         private bool IsCacheUpToDate ()
         {
+            Log.Info("Checking if cache is up to date");            
+            
             if (!File.Exists(this.LocalRepo))
                 return false;
                 
@@ -384,7 +389,9 @@ namespace Capuchin
                 this.OnStatus( ActionType.ExtractingPlugin, plugin_id, -1.0, -1);
                 Thread.Sleep(SLEEP_TIME);
             }
-            Logging.Log.Info("Updated plugin with id '{0}'", plugin_id);
+            
+            Log.Info("Updated plugin with id '{0}'", plugin_id);
+
             this.OnInstallFinished(plugin_id);
             this.DownloadToPluginId.Remove(dlid);
         }

@@ -6,6 +6,7 @@ using System.IO;
 using System.Threading;
 using NDesk.DBus;
 using org.freedesktop.DBus;
+using Capuchin.Logging;
 
 namespace Capuchin
 {
@@ -40,7 +41,7 @@ namespace Capuchin
             string object_path = String.Format(CAPUCHIN_PATH, this.GetApplicationName(repository_url));
             ObjectPath new_stuff_opath = new ObjectPath (object_path);
  
-            Logging.Log.Debug ("Creating app object at {0}", object_path);
+            Log.Info ("Creating app object for {0} at {1}", repository_url, object_path);
             AppObject nsm = new AppObject(repository_url);
             nsm.Closed += new AppObject.ClosedHandler( this.OnClosed );
             Bus.Session.Register(CAPUCHIN_SERVICE, new_stuff_opath, nsm);
@@ -52,6 +53,8 @@ namespace Capuchin
         
         protected void OnClosed(string repository_url)
         {
+            Log.Info ("Unregistering {0}", this.Objects[repository_url]);          
+            
             Bus.Session.Unregister( CAPUCHIN_SERVICE, this.Objects[repository_url]);
             this.Objects.Remove(repository_url);
         }
@@ -60,7 +63,7 @@ namespace Capuchin
         {
            if (!Directory.Exists(Globals.Instance.LOCAL_CACHE_DIR))
            {
-               Logging.Log.Debug("Creating directory {0}", Globals.Instance.LOCAL_CACHE_DIR);
+               Log.Info("Creating directory {0}", Globals.Instance.LOCAL_CACHE_DIR);
                Directory.CreateDirectory(Globals.Instance.LOCAL_CACHE_DIR);
            }
         }
