@@ -1,16 +1,14 @@
-<Combine name="capuchin" fileversion="2.0" outputpath="./build/bin/">
+<Combine name="capuchin" fileversion="2.0" outputpath="build/bin/">
   <Configurations active="Debug">
     <Configuration name="Debug" ctype="CombineConfiguration">
       <Entry build="True" name="dbus-sharp" configuration="Debug" />
       <Entry build="True" configuration="Debug" />
       <Entry build="True" name="libcapuchin" configuration="Debug" />
-      <Entry build="True" name="tests" configuration="Debug" />
     </Configuration>
     <Configuration name="Release" ctype="CombineConfiguration">
       <Entry build="True" name="dbus-sharp" configuration="Release" />
       <Entry build="True" configuration="Release" />
       <Entry build="True" name="libcapuchin" configuration="Release" />
-      <Entry build="True" name="tests" configuration="Release" />
     </Configuration>
   </Configurations>
   <StartMode startupentry="Capuchin" single="True">
@@ -21,9 +19,8 @@
   </StartMode>
   <DeployTargets />
   <Entries>
-    <Entry filename="./dbus-sharp/dbus-sharp.mdp" />
-    <Entry filename="./src/capuchin/capuchin.mdp" />
-    <Entry filename="./src/libcapuchin/libcapuchin.mdp" />
-    <Entry filename="./tests/tests.mdp" />
+    <Entry filename="dbus-sharp/dbus-sharp.mdp" />
+    <Entry filename="src/capuchin/capuchin.mdp" />
+    <Entry filename="src/libcapuchin/libcapuchin.mdp" />
   </Entries>
 </Combine>
