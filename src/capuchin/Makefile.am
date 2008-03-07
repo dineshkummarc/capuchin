@@ -14,8 +14,13 @@ capuchin_build_sources += $(capuchin_generated_sources)
 REFERENCES = \
     -r:../libcapuchin/capuchin-sharp.dll \
     -r:Mono.GetOptions \
-    -r:$(top_srcdir)/$(NDESKDBUS_LIBS) \
     $(GTKSHARP_LIBS)
+
+if ENABLE_INTERNAL_NDESKDBUS
+REFERENCES += -r:$(top_srcdir)/$(NDESKDBUS_LIBS)
+else
+REFERENCES += $(NDESKDBUS_LIBS)
+endif
 
 capuchin.exe: $(capuchin_build_sources) $(resources)
 	$(GMCS) $(REFERENCES) $(embedded) -out:$@ $(capuchin_build_sources)
