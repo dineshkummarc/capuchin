@@ -5,7 +5,6 @@ using System.Net;
 using System.Xml;
 using System.Xml.Serialization;
 using System.Threading;
-using NDesk.DBus;
 using Capuchin.Verification;
 using Capuchin.Compression;
 using Capuchin.Logging;
