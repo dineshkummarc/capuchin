@@ -184,7 +184,9 @@ namespace Capuchin
             
             int dlid = Globals.DLM.DownloadFile(this.RepoItems[plugin_id].Url, this.InstallPath, this.RepoItems[plugin_id].Signature, this.RepoItems[plugin_id].Checksum);
             
-            this.DownloadToPluginId.Add(dlid, plugin_id);
+            lock (this) {
+                this.DownloadToPluginId.Add(dlid, plugin_id);
+            }
         }
         
         /// <summary>
@@ -226,7 +228,7 @@ namespace Capuchin
             {
                 return this.RepoItems[plugin_id].Changelog[version];
             } else {
-                return "";
+                return String.Empty;
             }
         }
         
@@ -366,28 +368,33 @@ namespace Capuchin
             
         private void OnDownloadStatus (int dlid, double progress, int speed)
         {
-            if (!this.DownloadToPluginId.ContainsKey(dlid))
-                throw new ArgumentException ("Could not find download with id "+dlid);            
-            
             if (dlid == this.repo_dlid)
             {
                 this.OnStatus (ActionType.UpdatingRepo, "", progress, speed);
             } else {
-                this.OnStatus (ActionType.DownloadingPlugin, this.DownloadToPluginId[dlid], progress, speed);
+                lock (this) {
+                    if (!this.DownloadToPluginId.ContainsKey(dlid))
+                        throw new ArgumentException ("Could not find download with id "+dlid);
+                    
+                    this.OnStatus (ActionType.DownloadingPlugin, this.DownloadToPluginId[dlid], progress, speed);
+                }
             }
         }
         
         private void OnDownloadFinished (int dlid)
         {
-            if (!this.DownloadToPluginId.ContainsKey(dlid))
-                throw new ArgumentException ("Could not find download with id "+dlid);            
-            
             if (dlid == this.repo_dlid) {
                 this.LoadRepository();
                 return;
             }
-                
-            string plugin_id = this.DownloadToPluginId[dlid];
+            
+            string plugin_id = null;
+            lock (this) {
+                if (!this.DownloadToPluginId.ContainsKey(dlid))
+                    throw new ArgumentException ("Could not find download with id "+dlid);            
+                    
+               plugin_id = this.DownloadToPluginId[dlid];
+            }
             string local_file = Path.Combine( this.InstallPath, Path.GetFileName(this.RepoItems[plugin_id].Url) );
         
             // Check file
@@ -405,7 +412,9 @@ namespace Capuchin
             Log.Info("Updated plugin with id '{0}'", plugin_id);
 
             this.OnInstallFinished(plugin_id);
-            this.DownloadToPluginId.Remove(dlid);
+            lock (this) {
+                this.DownloadToPluginId.Remove(dlid);
+            }
         }
         
         /// <summary>Check whether first argument is newer as second one</summary>

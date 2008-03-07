@@ -49,9 +49,11 @@ namespace Capuchin
             
             Thread downloaderThread = new Thread( new ThreadStart(downloader.Download) );
             dl.Downloader = downloaderThread;
-            this.Downloads.Add( this.downloadsIndex, dl );
-            this.downloadsIndex++;
-            downloaderThread.Start();
+            lock (this) {
+                this.Downloads.Add( this.downloadsIndex, dl );
+                this.downloadsIndex++;
+                downloaderThread.Start();
+            }
             
             Log.Info("Started downloading file {0} to {1} with id '{2}'", download_url, download_dest, this.downloadsIndex-1);
             
@@ -63,8 +65,10 @@ namespace Capuchin
         public virtual void PauseDownload(int id)
         {
             Log.Info("Paused download with id '{0}'", id);
-            // Kill Downloader Thread
-            this.Downloads[id].Downloader.Abort();
+            lock (this) {
+                // Kill Downloader Thread
+                this.Downloads[id].Downloader.Abort();
+            }
         }
         
         /// <summary>Abort download</summary>
@@ -73,9 +77,11 @@ namespace Capuchin
         {
             Log.Info("Aborted download with id '{0}'", id);
         
-            this.PauseDownload(id);
-            File.Delete(this.Downloads[id].LocalFile);
-            this.Downloads.Remove(id);
+            lock (this) {
+                this.PauseDownload(id);
+                File.Delete(this.Downloads[id].LocalFile);
+                this.Downloads.Remove(id);
+            }
         }
         
         /// <summary>Resume download</summary>
@@ -84,21 +90,23 @@ namespace Capuchin
         {
             // Get file info
             FileInfo f = new FileInfo( this.Downloads[id].LocalFile );
-            // Get Downloader
-            Downloaders.AbstractDownloader downloader = this.GetDownloader(id, this.Downloads[id]);
-            // FIXME: Do we really need to connect the signals again?
-            downloader.Status += new Downloaders.StatusHandler( this.OnDownloadStatus );
-            downloader.Finished += new Downloaders.FinishedHandler( this.DownloadFinishedCallback );
-            // Start Thread
-            Thread downloaderThread = new Thread( new ParameterizedThreadStart(downloader.Download) );
-            this.Downloads[id] = new Download ( id,
-                this.Downloads[id].Url,
-                this.Downloads[id].Destination,
-                this.Downloads[id].Signature,
-                this.Downloads[id].Checksum,
-                downloaderThread);
-            downloaderThread.Start(f.Length);
             
+            lock (this) {
+                // Get Downloader
+                Downloaders.AbstractDownloader downloader = this.GetDownloader(id, this.Downloads[id]);
+                // FIXME: Do we really need to connect the signals again?
+                downloader.Status += new Downloaders.StatusHandler( this.OnDownloadStatus );
+                downloader.Finished += new Downloaders.FinishedHandler( this.DownloadFinishedCallback );
+                // Start Thread
+                Thread downloaderThread = new Thread( new ParameterizedThreadStart(downloader.Download) );
+                this.Downloads[id] = new Download ( id,
+                    this.Downloads[id].Url,
+                    this.Downloads[id].Destination,
+                    this.Downloads[id].Signature,
+                    this.Downloads[id].Checksum,
+                    downloaderThread);
+                downloaderThread.Start(f.Length);
+            }
             Log.Info("Resuming download with id '{0}'", id);
         }
         
@@ -121,8 +129,10 @@ namespace Capuchin
         {
             Log.Info("Finished downloading file with id '{0}'", id);
             
-            // Remove Download
-            this.Downloads.Remove(id);
+            lock (this) {
+                // Remove Download
+                this.Downloads.Remove(id);
+            }
             
             this.OnDownloadFinished(id);
         }
