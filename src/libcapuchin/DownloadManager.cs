@@ -24,7 +24,7 @@ namespace Capuchin
         {
             this.Downloads = new Dictionary<int, Download>();
             this.downloadsIndex = 0;
-           }
+        }
         
         /// <summary>Download a file using the DownloadManager</summary>
         public virtual int DownloadFile(string download_url, string download_dest)
@@ -119,7 +119,8 @@ namespace Capuchin
         }
         
         /// <summary>Emits the finished signal</summary>
-        protected void OnDownloadFinished(int id) {
+        protected void OnDownloadFinished(int id)
+        {
             if (DownloadFinished != null) {
                 DownloadFinished(id);
             }
