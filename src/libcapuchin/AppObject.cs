@@ -78,6 +78,7 @@ namespace Capuchin
                 );                
                 
                 this.RepoItems = null;
+                this.DownloadToPluginId = null;
                 this.disposed = true;
                 GC.SuppressFinalize(this);
             }
@@ -247,7 +248,7 @@ namespace Capuchin
             Log.Info("Getting author of plugin with id '{0}'", plugin_id);
             
             author plugin_author = this.RepoItems[plugin_id].Author;
-            return new string[] { plugin_author["name"], plugin_author["email"] };
+            return new string[] { plugin_author.Name, plugin_author.Email };
         }
         
         /// <summary>Tell the object that it isn't needed anymore</summary>

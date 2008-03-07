@@ -7,6 +7,7 @@ namespace Capuchin.Xml
     [XmlRootAttribute(ElementName="repository", Namespace="", IsNullable=false)]
     public class Repository
     {
+        [XmlElementAttribute("application")]
         public string application;
         
         [XmlElementAttribute("installpath")]
