@@ -3,21 +3,21 @@ using System.Collections.Generic;
 using System.Threading;
 using NDesk.DBus;
 
-public class TestNSM
+public class TestCapuchin
 {
 	protected const string CAPUCHIN_SERVICE = "org.gnome.Capuchin";
-	protected const string CAPUCHIN_PATH = "/org/gnome/Capuchin";
+	protected const string APPOBJECTMANAGER_PATH = "/org/gnome/Capuchin/AppObjectManager";
 	
-	protected Capuchin.ICapuchin stuffmanager;
+	protected Capuchin.IAppObjectManager stuffmanager;
 	protected Capuchin.IAppObject newstuff;
 	
-	private static TestNSM test = new TestNSM();
+	private static TestCapuchin test = new TestCapuchin();
 	
-	public TestNSM()
+	public TestCapuchin()
 	{
 		Bus bus = Bus.Session;
 		
-		this.stuffmanager = bus.GetObject<Capuchin.ICapuchin> (CAPUCHIN_SERVICE, new ObjectPath (CAPUCHIN_PATH)); 
+		this.stuffmanager = bus.GetObject<Capuchin.IAppObjectManager> (CAPUCHIN_SERVICE, new ObjectPath (APPOBJECTMANAGER_PATH)); 
 	}
 	
 	public void testGetNewStuff()
@@ -49,15 +49,15 @@ public class TestNSM
 	
 	public void testGetAvailableNewStuff()
 	{
-		string[][] stuff = this.newstuff.GetAvailablePlugins();
+		string[] stuff = this.newstuff.GetAvailablePlugins();
 		Console.WriteLine ("ALL:");
-		foreach (string[] s in stuff)
+		foreach (string s in stuff)
 		{
-			Console.WriteLine ("ID: " + s[0]);
-            Console.WriteLine ("Name: " + s[1]);
-            Console.WriteLine ("Description: " + this.newstuff.GetDescription(s[0]) );
-            IDictionary<string, string> author = this.newstuff.GetAuthor(s[0]);
-            Console.WriteLine ("Author: {0} <{1}>", author["name"], author["email"]);
+			Console.WriteLine ("ID: " + s);
+            Console.WriteLine ("Name: " + this.newstuff.GetName(s));
+            Console.WriteLine ("Description: " + this.newstuff.GetDescription(s) );
+            string[] author = this.newstuff.GetAuthor(s);
+            Console.WriteLine ("Author: {0} <{1}>", author[0], author[1]);
 		}
 	}
 	
@@ -88,8 +88,8 @@ public class TestNSM
 	
 	public void testGetAuthor()
 	{
-		IDictionary<string, string> author = this.newstuff.GetAuthor("leoorg.py");
-		Console.WriteLine ("AUTHOR: {0}, {1}", author["name"], author["email"]);
+		string[] author = this.newstuff.GetAuthor("leoorg.py");
+		Console.WriteLine ("AUTHOR: {0}, {1}", author[0], author[1]);
 	}
 	
 	public void testUpdate()

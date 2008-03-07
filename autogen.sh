@@ -1,7 +1,7 @@
 #! /bin/sh
 
 PROJECT=Capuchin
-FILE=src/libcapuchin/Capuchin.cs
+FILE=src/libcapuchin/AppObjectManager.cs
 CONFIGURE=configure.ac
 
 : ${AUTOCONF=autoconf}

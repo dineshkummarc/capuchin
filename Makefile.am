@@ -1,8 +1,12 @@
-SUBDIRS = data examples
+SUBDIRS = data
 if ENABLE_INTERNAL_NDESKDBUS
 SUBDIRS += dbus-sharp
 endif
 SUBDIRS += src
+if WITH_EXAMPLES
+SUBDIRS += examples
+endif
+
 bin_SCRIPTS = capuchin
 EXTRA_DIST = capuchin-sharp.pc.in \
     capuchin.in

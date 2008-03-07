@@ -14,7 +14,7 @@ capuchin_build_sources += $(capuchin_generated_sources)
 REFERENCES = \
     -r:../libcapuchin/capuchin-sharp.dll \
     -r:Mono.GetOptions \
-    $(NDESKDBUS_LIBS) \
+    -r:$(top_srcdir)/$(NDESKDBUS_LIBS) \
     $(GTKSHARP_LIBS)
 
 capuchin.exe: $(capuchin_build_sources) $(resources)

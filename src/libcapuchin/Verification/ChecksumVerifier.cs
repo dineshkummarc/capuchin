@@ -1,6 +1,7 @@
 
 using System;
 using System.Security.Cryptography;
+using Capuchin.Xml;
 
 namespace Capuchin.Verification
 {

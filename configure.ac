@@ -25,6 +25,11 @@ dnl Expansions
 SHAMROCK_EXPAND_DATADIR
 SHAMROCK_EXPAND_LIBDIR
 
+dnl Examples
+AC_ARG_WITH([examples], AC_HELP_STRING([--with-examples], [Compile examples]),
+with_examples=yes, with_examples=no)
+AM_CONDITIONAL(WITH_EXAMPLES, test "x$with_examples" = "xyes")
+
 dnl ****************************************************************************
 dnl * mono
 dnl ****************************************************************************
@@ -51,7 +56,7 @@ PKG_CHECK_MODULES(GNOMEVFSSHARP, gnome-vfs-sharp-2.0 >= $GNOMEVFSSHARP_REQUIRED_
 dnl ****************************************************************************
 dnl * ndesk-dbus
 dnl ****************************************************************************
-AC_ARG_ENABLE([internal-dbus], AS_HELP_STRING([--enable-internal-dbus], [Use internal ndesk-dbus library (default: auto)]),
+AC_ARG_ENABLE([internal-dbus], AC_HELP_STRING([--enable-internal-dbus], [Use internal ndesk-dbus library (default: auto)]),
 enable_internal_ndeskdbus=$enableval, enable_internal_ndeskdbus=auto)
 
 NDESKDBUS_REQUIRED_VERSION=0.5.2
@@ -62,11 +67,11 @@ if test "x$has_ndeskdbus" = "xno"; then
 		AC_MSG_ERROR([Could not find ndesk-dbus library])
 	fi
 	enable_internal_ndeskdbus="yes"
-	NDESKDBUS_LIBS="-r:../../dbus-sharp/NDesk.DBus.dll"
+	NDESKDBUS_LIBS="dbus-sharp/NDesk.DBus.dll"
 else
 	if test "x$enable_internal_ndeskdbus" = "xyes"; then
 		enable_internal_ndeskdbus="yes"
-		NDESKDBUS_LIBS= "-r:../../dbus-sharp/NDesk.DBus.dll"
+		NDESKDBUS_LIBS= "dbus-sharp/NDesk.DBus.dll"
 	else
 		enable_internal_ndeskdbus="no"
 	fi

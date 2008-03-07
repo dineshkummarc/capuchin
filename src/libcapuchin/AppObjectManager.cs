@@ -10,14 +10,8 @@ using Capuchin.Logging;
 
 namespace Capuchin
 {
-    /// <summary>Entry point for applications to request their own <see cref="Capuchin.AppObject /> object</summary>
-    [Interface("org.gnome.Capuchin")]
-    public interface ICapuchin
-    {
-        ObjectPath GetAppObject(string repository_url);
-    }
     
-    public class Capuchin : ICapuchin
+    public class AppObjectManager : IAppObjectManager
     {
 
         public const string CAPUCHIN_SERVICE = "org.gnome.Capuchin";
@@ -25,7 +19,7 @@ namespace Capuchin
         
         protected Dictionary<string, ObjectPath> Objects;
         
-        public Capuchin()
+        public AppObjectManager()
         {
             this.Objects = new Dictionary<string, ObjectPath>();
             this.CreateCacheIfNotExists();

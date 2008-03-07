@@ -1,4 +1,4 @@
-<Project name="libcapuchin" fileversion="2.0" language="C#" clr-version="Net_2_0" ctype="DotNetProject">
+<Project name="libcapuchin" fileversion="2.0" DefaultNamespace="Capuchin" language="C#" clr-version="Net_2_0" ctype="DotNetProject">
   <Configurations active="Debug">
     <Configuration name="Debug" ctype="DotNetProjectConfiguration">
       <Output directory="bin/Debug" assembly="libcapuchin" />
@@ -15,8 +15,7 @@
   </Configurations>
   <Contents>
     <File name="AppObject.cs" subtype="Code" buildaction="Compile" />
-    <File name="Repository.cs" subtype="Code" buildaction="Compile" />
-    <File name="Capuchin.cs" subtype="Code" buildaction="Compile" />
+    <File name="AppObjectManager.cs" subtype="Code" buildaction="Compile" />
     <File name="Compression/Decompresser.cs" subtype="Code" buildaction="Compile" />
     <File name="Compression/IExtracter.cs" subtype="Code" buildaction="Compile" />
     <File name="Compression/TarBz2Extracter.cs" subtype="Code" buildaction="Compile" />
@@ -29,7 +28,6 @@
     <File name="Globals.cs.in" subtype="Code" buildaction="Nothing" />
     <File name="Downloaders" subtype="Directory" buildaction="Compile" />
     <File name="Downloaders/HttpDownloader.cs" subtype="Code" buildaction="Compile" />
-    <File name="Downloaders/FtpDownloader.cs" subtype="Code" buildaction="Compile" />
     <File name="Downloaders/AbstractDownloader.cs" subtype="Code" buildaction="Compile" />
     <File name="Download.cs" subtype="Code" buildaction="Compile" />
     <File name="DownloadManager.cs" subtype="Code" buildaction="Compile" />
@@ -37,6 +35,15 @@
     <File name="Logging/Log.cs" subtype="Code" buildaction="Compile" />
     <File name="Logging/TeeTextWriter.cs" subtype="Code" buildaction="Compile" />
     <File name="Logging/DelayedTextWriter.cs" subtype="Code" buildaction="Compile" />
+    <File name="IAppObject.cs" subtype="Code" buildaction="Compile" />
+    <File name="IAppObjectManager.cs" subtype="Code" buildaction="Compile" />
+    <File name="Xml" subtype="Directory" buildaction="Compile" />
+    <File name="Xml/Repository.cs" subtype="Code" buildaction="Compile" />
+    <File name="Xml/ItemsDict.cs" subtype="Code" buildaction="Compile" />
+    <File name="Xml/item.cs" subtype="Code" buildaction="Compile" />
+    <File name="Xml/changelog.cs" subtype="Code" buildaction="Compile" />
+    <File name="Xml/checksum.cs" subtype="Code" buildaction="Compile" />
+    <File name="Xml/author.cs" subtype="Code" buildaction="Compile" />
   </Contents>
   <References>
     <ProjectReference type="Gac" localcopy="True" refto="gnome-vfs-sharp, Version=2.8.0.0, Culture=neutral, PublicKeyToken=35e10195dab3c99f" />

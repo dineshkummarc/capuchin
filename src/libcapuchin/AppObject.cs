@@ -1,4 +1,3 @@
-
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -10,37 +9,10 @@ using NDesk.DBus;
 using Capuchin.Verification;
 using Capuchin.Compression;
 using Capuchin.Logging;
+using Capuchin.Xml;
 
 namespace Capuchin
 {
-    public enum ActionType {
-        UpdatingRepo,
-        DownloadingPlugin,
-        ExtractingPlugin
-    }
-    
-    public delegate void UpdateFinishedHandler ();
-    public delegate void InstallFinishedHandler (string plugin_id);
-    public delegate void StatusHandler (ActionType action, string plugin_id, double progress, int speed);
-            
-    [Interface("org.gnome.Capuchin.AppObject")]
-    public interface IAppObject
-    {
-        event UpdateFinishedHandler UpdateFinished;
-        event InstallFinishedHandler InstallFinished;
-        event StatusHandler Status;
-        
-        string GetApplicationName ();
-        void Update (bool force_update);
-        void Install (string plugin_id);
-        string[][] GetAvailablePlugins ();        
-        string[] GetAvailableUpdates (string[][] plugins);
-        string GetDescription (string plugin_id);
-        string GetChanges (string plugin_id, string version);
-        string[] GetTags (string plugin_id);        
-        IDictionary<string, string> GetAuthor (string plugin_id);        
-        void Close ();
-    }
     
     public class RepositoryConnectionException : ApplicationException
     {
@@ -50,7 +22,7 @@ namespace Capuchin
     }
     
     /// <summary>An application specific object that handels the plugins</summary>
-    public class AppObject : IDisposable,IAppObject
+    public class AppObject : IDisposable, IAppObject
     {
         public event UpdateFinishedHandler UpdateFinished;
         public event InstallFinishedHandler InstallFinished;
@@ -78,6 +50,7 @@ namespace Capuchin
             this.LocalRepo = Path.Combine(Globals.Instance.LOCAL_CACHE_DIR, Path.GetFileName(repository_url));
             // Used to map DownloadId to PluginID
             this.DownloadToPluginId = new Dictionary<int, string>();
+            Console.WriteLine("NEW DICT");
             
             // Forward DownloadStatus event
             Globals.DLM.DownloadStatus += new DownloadManagerStatusHandler(
@@ -152,19 +125,19 @@ namespace Capuchin
         /// An array of string arrays of size 2.
         /// Whereas the first element is the plugin's id, second the plugin's name.
         /// </returns>
-        public string[][] GetAvailablePlugins ()
+        public string[] GetAvailablePlugins ()
         {
             Log.Info("Getting available plugins");
             
-            string[][] stuff = new string[this.RepoItems.Count][];
+            string[] ids = new string[this.RepoItems.Count];
             int c=0;
             foreach (string id in this.RepoItems.Keys)
             {
-                stuff[c] = new string[] { id, this.RepoItems[id].Name };
+                ids[c] = id;
                 c++;
             }
             
-            return stuff;
+            return ids;
         }
         
         /// <summary>Get all available updates</summary>
@@ -207,6 +180,28 @@ namespace Capuchin
         }
         
         /// <summary>
+        /// Returns all plugins that are tagged with the given tag
+        /// </summary>
+        /// <param name="tag">
+        /// A tag
+        /// </param>
+        /// <returns>
+        /// A list of plugin IDs
+        /// </returns>
+        public string[] GetPluginsWithTag (string tag)
+        {
+            return null;   
+        }
+        
+        /// <summary>
+        /// Get name of plugin with given <code>plugin_id</code>
+        /// </summary>
+        public string GetName (string plugin_id)
+        {
+            return this.RepoItems[plugin_id].Name;
+        }
+        
+        /// <summary>
         /// Get description for given <code>plugin_id</code>
         /// </summary>
         public string GetDescription (string plugin_id)
@@ -240,10 +235,12 @@ namespace Capuchin
         /// <summary>Get the author's name and e-mail address for the plugin with ID <code>plugin_id</code></summary>
         /// <param name="plugin_id">Plugin's ID</param>
         /// <returns>Dictionary with keys "name" and "email"</returns>
-        public IDictionary<string, string> GetAuthor (string plugin_id)
+        public string[] GetAuthor (string plugin_id)
         {
             Log.Info("Getting author of plugin with id '{0}'", plugin_id);
-            return this.RepoItems[plugin_id].Author;
+            
+            author plugin_author = this.RepoItems[plugin_id].Author;
+            return new string[] { plugin_author["name"], plugin_author["email"] };
         }
         
         /// <summary>Tell the object that it isn't needed anymore</summary>
@@ -289,7 +286,7 @@ namespace Capuchin
         }
          
         /// <summary>Extract file</summary>
-        /// <param name="dlobject">A <see cref="Download" /> instance</param>   
+        /// <param name="dlobject">A <see cref="Capuchin.Download" /> instance</param>   
         protected void ExtractFile (object local_file_obj)
         {   
             string local_file = (string)local_file_obj;
@@ -337,7 +334,7 @@ namespace Capuchin
         }
         
         /// <summary>Check whether repository's XML file has to be downloaded again</summary>
-        /// <exception cref="Nsm.RepositoryConnectionException">
+        /// <exception cref="Capuchin.RepositoryConnectionException">
         /// Thrown if connection to repository failed
         /// </exception>
         private bool IsCacheUpToDate ()

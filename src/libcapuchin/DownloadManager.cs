@@ -6,6 +6,7 @@ using System.Threading;
 using NDesk.DBus;
 using org.freedesktop.DBus;
 using Capuchin.Logging;
+using Capuchin.Xml;
 
 namespace Capuchin
 {

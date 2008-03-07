@@ -20,7 +20,7 @@ class CapuchinOptions : Options
 class MainClass
 {
     public const string OBJECT_SERVICE = "org.gnome.Capuchin";
-    public const string CAPUCHIN_OBJECT_PATH = "/org/gnome/Capuchin";
+    public const string APPOBJECTMANAGER_OBJECT_PATH = "/org/gnome/Capuchin/AppObjectManager";
     public const string DOWNLOADMANAGER_OBJECT_PATH = "/org/gnome/Capuchin/DownloadManager";
 	
 	static CapuchinOptions opts = new CapuchinOptions();
@@ -45,8 +45,8 @@ class MainClass
                                             );
         }
         
-		Capuchin.Capuchin obj_manager = new Capuchin.Capuchin();
-		Bus.Session.Register(OBJECT_SERVICE, new ObjectPath(CAPUCHIN_OBJECT_PATH), obj_manager);
+		Capuchin.AppObjectManager obj_manager = new Capuchin.AppObjectManager();
+		Bus.Session.Register(OBJECT_SERVICE, new ObjectPath(APPOBJECTMANAGER_OBJECT_PATH), obj_manager);
 		
 		Capuchin.DownloadManager dlm = new Capuchin.DownloadManager();
 		Bus.Session.Register(OBJECT_SERVICE, new ObjectPath(DOWNLOADMANAGER_OBJECT_PATH), dlm);
