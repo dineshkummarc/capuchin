@@ -50,7 +50,6 @@ namespace Capuchin
             this.LocalRepo = Path.Combine(Globals.Instance.LOCAL_CACHE_DIR, Path.GetFileName(repository_url));
             // Used to map DownloadId to PluginID
             this.DownloadToPluginId = new Dictionary<int, string>();
-            Console.WriteLine("NEW DICT");
             
             // Forward DownloadStatus event
             Globals.DLM.DownloadStatus += new DownloadManagerStatusHandler(
@@ -70,6 +69,14 @@ namespace Capuchin
         {
             if (!this.disposed)
             {
+                // Forward DownloadStatus event
+                Globals.DLM.DownloadStatus -= new DownloadManagerStatusHandler(
+                        this.OnDownloadStatus
+                );
+                Globals.DLM.DownloadFinished -= new DownloadManagerFinishedHandler(
+                    this.OnDownloadFinished
+                );                
+                
                 this.RepoItems = null;
                 this.disposed = true;
                 GC.SuppressFinalize(this);
@@ -247,6 +254,7 @@ namespace Capuchin
         public void Close()
         {
             Log.Info("Closing object for {0}", this.ApplicationName);
+            this.Dispose();
             this.OnClosed();
         }
         
@@ -357,6 +365,9 @@ namespace Capuchin
             
         private void OnDownloadStatus (int dlid, double progress, int speed)
         {
+            if (!this.DownloadToPluginId.ContainsKey(dlid))
+                throw new ArgumentException ("Could not find download with id "+dlid);            
+            
             if (dlid == this.repo_dlid)
             {
                 this.OnStatus (ActionType.UpdatingRepo, "", progress, speed);
@@ -367,6 +378,9 @@ namespace Capuchin
         
         private void OnDownloadFinished (int dlid)
         {
+            if (!this.DownloadToPluginId.ContainsKey(dlid))
+                throw new ArgumentException ("Could not find download with id "+dlid);            
+            
             if (dlid == this.repo_dlid) {
                 this.LoadRepository();
                 return;
