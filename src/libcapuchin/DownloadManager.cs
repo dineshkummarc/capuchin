@@ -3,27 +3,11 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
-using NDesk.DBus;
-using org.freedesktop.DBus;
 using Capuchin.Logging;
 using Capuchin.Xml;
 
 namespace Capuchin
 {
-    public delegate void DownloadManagerStatusHandler(int id, double progress, int speed);
-    public delegate void DownloadManagerFinishedHandler(int id);
-    
-    [Interface("org.gnome.Capuchin.DownloadManager")]
-    public interface IDownloadManager
-    {
-        event DownloadManagerStatusHandler DownloadStatus;
-        event DownloadManagerFinishedHandler DownloadFinished;
-        int DownloadFile(string download_url, string download_dest);
-        void PauseDownload(int id);
-        void AbortDownload(int id);
-        void ResumeDownload(int id);
-    }
-    
     /// <summary>Class that manages downloads</summary>
     public class DownloadManager : IDownloadManager
     {
@@ -52,7 +36,7 @@ namespace Capuchin
         /// <param name="download_dest">Directory where to save the file</param>
         /// <param name="checksumField">Checksum instance of file or null</param>
         /// <returns>
-        /// An <see cref="Nsm.Downloaders.AbstractDownloader" /> instance to
+        /// An <see cref="Capuchin.Downloaders.AbstractDownloader" /> instance to
         /// download the given file
         /// </returns>
         internal int DownloadFile (string download_url, string download_dest, string signature, checksum checksumField)
@@ -75,7 +59,7 @@ namespace Capuchin
         }
         
         /// <summary>Pause download</summary>
-        /// <param name="id">Download id as returned by <see cref="Nsm.DownloadManager.DownloadFile" /></param>
+        /// <param name="id">Download id as returned by <see cref="Capuchin.DownloadManager.DownloadFile" /></param>
         public virtual void PauseDownload(int id)
         {
             Log.Info("Paused download with id '{0}'", id);
@@ -84,7 +68,7 @@ namespace Capuchin
         }
         
         /// <summary>Abort download</summary>
-        /// <param name="id">Download id as returned by <see cref="Nsm.DownloadManager.DownloadFile" /></param>
+        /// <param name="id">Download id as returned by <see cref="Capuchin.DownloadManager.DownloadFile" /></param>
         public virtual void AbortDownload(int id)
         {
             Log.Info("Aborted download with id '{0}'", id);
@@ -95,7 +79,7 @@ namespace Capuchin
         }
         
         /// <summary>Resume download</summary>
-        /// <param name="id">Download id as returned by <see cref="Nsm.DownloadManager.DownloadFile" /></param>
+        /// <param name="id">Download id as returned by <see cref="Capuchin.DownloadManager.DownloadFile" /></param>
         public virtual void ResumeDownload(int id)
         {
             // Get file info
@@ -143,7 +127,7 @@ namespace Capuchin
             this.OnDownloadFinished(id);
         }
         
-        /// <summary>Returns the appropriate <see cref="Nsm.Downloaders.AbstractDownloader" /></summary>
+        /// <summary>Returns the appropriate <see cref="Capuchin.Downloaders.AbstractDownloader" /></summary>
         internal Downloaders.AbstractDownloader GetDownloader(int id, Download dl)
         {
             Uri uri = new Uri(dl.Url);

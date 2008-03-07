@@ -30,7 +30,8 @@ libcapuchin_sources = \
 	Download.cs \
 	DownloadManager.cs \
 	IAppObject.cs \
-	IAppObjectManager.cs
+	IAppObjectManager.cs \
+	IDownloadManager.cs	
 
 REFERENCES =  \
 	-r:System \
