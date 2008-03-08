@@ -6,7 +6,7 @@ namespace Capuchin.Xml
 {
     
     [XmlRootAttribute(Namespace = "", IsNullable = false)]
-    public class item
+    internal class item
     {   
         [XmlElementAttribute("author", typeof(author), IsNullable = false)]
         public author Author;

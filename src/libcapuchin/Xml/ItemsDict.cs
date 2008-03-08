@@ -6,7 +6,7 @@ using System.Xml.Serialization;
 namespace Capuchin.Xml
 {
     
-    public class ItemsDict : Dictionary<string, item>, IXmlSerializable
+    internal class ItemsDict : Dictionary<string, item>, IXmlSerializable
     {
         public System.Xml.Schema.XmlSchema GetSchema()
         {

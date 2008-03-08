@@ -7,7 +7,7 @@ namespace Capuchin.Xml
 {
     
    [XmlRootAttribute(ElementName="changelog", Namespace = "", IsNullable = false)]
-    public class changelog : Dictionary<string, string>, IXmlSerializable
+    internal class changelog : Dictionary<string, string>, IXmlSerializable
     {
         public System.Xml.Schema.XmlSchema GetSchema()
         {

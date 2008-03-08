@@ -30,7 +30,7 @@ namespace Capuchin
         internal delegate void ClosedHandler(string application_name);
         internal event ClosedHandler Closed;
     
-        public ItemsDict RepoItems;
+        internal ItemsDict RepoItems;
         public readonly string RepositoryURL;
         
         protected string LocalRepo;
@@ -264,7 +264,7 @@ namespace Capuchin
         /// <param name="local_file">Path to the downloaded file</param>
         /// <param name="signature">URL of the signature file</param>
         /// <param name="checksumField">Checksum information</param>
-        protected void CheckFile (string local_file, string signature, checksum checksumField)
+        internal void CheckFile (string local_file, string signature, checksum checksumField)
         {
             if (checksumField != null)
             {
