@@ -205,7 +205,7 @@ namespace Capuchin
         /// <summary>
         /// Get name of plugin with given <code>plugin_id</code>
         /// </summary>
-        public string GetName (string plugin_id)
+        public string GetPluginName (string plugin_id)
         {
             return this.RepoItems[plugin_id].Name;
         }
@@ -213,7 +213,7 @@ namespace Capuchin
         /// <summary>
         /// Get description for given <code>plugin_id</code>
         /// </summary>
-        public string GetDescription (string plugin_id)
+        public string GetPluginDescription (string plugin_id)
         {
             return this.RepoItems[plugin_id].Description;   
         }
@@ -221,7 +221,7 @@ namespace Capuchin
         /// <summary>
         /// Get changes for plugin with given ID made in given version
         /// </summary>
-        public string GetChanges (string plugin_id, string version)
+        public string GetPluginChanges (string plugin_id, string version)
         {
             if (this.RepoItems[plugin_id].Changelog.ContainsKey (version))
             {
@@ -234,7 +234,7 @@ namespace Capuchin
         /// <summary>Get tags for the plugin with ID <code>plugin_id</code></summary>
         /// <param name="plugin_id">Plugin's ID</param>
         /// <returns>An array of tags</returns>
-        public string[] GetTags (string plugin_id)
+        public string[] GetPluginTags (string plugin_id)
         {
             Log.Info("Getting tags for plugin with id '{0}'", plugin_id);
             string[] tags = this.RepoItems[plugin_id].Tags;
@@ -244,12 +244,17 @@ namespace Capuchin
         /// <summary>Get the author's name and e-mail address for the plugin with ID <code>plugin_id</code></summary>
         /// <param name="plugin_id">Plugin's ID</param>
         /// <returns>Dictionary with keys "name" and "email"</returns>
-        public string[] GetAuthor (string plugin_id)
+        public string[] GetPluginAuthor (string plugin_id)
         {
             Log.Info("Getting author of plugin with id '{0}'", plugin_id);
             
             author plugin_author = this.RepoItems[plugin_id].Author;
             return new string[] { plugin_author.Name, plugin_author.Email };
+        }
+        
+        public string[] GetTags ()
+        {
+            return null;
         }
         
         /// <summary>Tell the object that it isn't needed anymore</summary>

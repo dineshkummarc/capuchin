@@ -26,11 +26,12 @@ namespace Capuchin
         string[] GetAvailablePlugins ();
         string[] GetAvailableUpdates (string[][] plugins);
         string[] GetPluginsWithTag (string tag);
-        string GetName (string plugin_id);
-        string GetDescription (string plugin_id);
-        string GetChanges (string plugin_id, string version);
-        string[] GetTags (string plugin_id);
-        string[] GetAuthor (string plugin_id);
+        string GetPluginName (string plugin_id);
+        string GetPluginDescription (string plugin_id);
+        string GetPluginChanges (string plugin_id, string version);
+        string[] GetPluginTags (string plugin_id);
+        string[] GetPluginAuthor (string plugin_id);
+        string[] GetTags ();
         void Close ();
     }
 }

@@ -6,8 +6,8 @@ using System.Xml.Serialization;
 namespace Capuchin.Xml
 {
     
-   [XmlRootAttribute(ElementName="changelog", Namespace = "", IsNullable = false)]
-    internal class changelog : Dictionary<string, string>, IXmlSerializable
+    [XmlRootAttribute(ElementName="changelog", Namespace = "", IsNullable = false)]
+    public class changelog : Dictionary<string, string>, IXmlSerializable
     {
         public System.Xml.Schema.XmlSchema GetSchema()
         {

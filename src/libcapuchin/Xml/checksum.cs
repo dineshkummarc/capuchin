@@ -5,14 +5,14 @@ using System.Xml.Serialization;
 namespace Capuchin.Xml
 {
     
-    internal enum checksumType
+    public enum checksumType
     {
         sha1,
         md5,
     }
     
     [XmlRootAttribute(Namespace = "", IsNullable = false)]
-    internal class checksum
+    public class checksum
     {
 
         private checksumType typeField;

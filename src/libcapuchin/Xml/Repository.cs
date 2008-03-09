@@ -5,7 +5,7 @@ using System.Xml.Serialization;
 namespace Capuchin.Xml
 {
     [XmlRootAttribute(ElementName="repository", Namespace="", IsNullable=false)]
-    internal class Repository
+    public class Repository
     {
         [XmlElementAttribute("application")]
         public string application;
