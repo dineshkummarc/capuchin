@@ -20,7 +20,9 @@ namespace Capuchin
         public RepositoryConnectionException(string message, Exception inner) : base(message, inner) { }
     }
     
-    /// <summary>An application specific object that handels the plugins</summary>
+    /// <summary>
+	/// An application specific object that handels the plugins
+	/// </summary>
     public class AppObject : IDisposable, IAppObject
     {
         public event UpdateFinishedHandler UpdateFinished;
@@ -37,6 +39,7 @@ namespace Capuchin
         protected string InstallPath;
         protected IDictionary<int, string> DownloadToPluginId;
         protected string ApplicationName;
+		protected IDictionary<string, List<string>> TagToPlugins;
         
         private const int SLEEP_TIME = 500;
         private bool disposed = false;
@@ -49,6 +52,8 @@ namespace Capuchin
             this.LocalRepo = Path.Combine(Globals.Instance.LOCAL_CACHE_DIR, Path.GetFileName(repository_url));
             // Used to map DownloadId to PluginID
             this.DownloadToPluginId = new Dictionary<int, string>();
+			// Used to map tag to plugin ids
+			this.TagToPlugins = new Dictionary<string, List<string>> ();
             
             // Forward DownloadStatus event
             Globals.DLM.DownloadStatus += new DownloadManagerStatusHandler(
@@ -84,7 +89,7 @@ namespace Capuchin
         }
         
         /// <summary>Load the repository</summary>
-        /// <param name="force_update">Force downloading reository's XML file</param>
+        /// <param name="force_update">Force downloading repository's XML file</param>
         public void Update (bool force_update)
         {
             Log.Info("Refreshing");            
@@ -118,6 +123,8 @@ namespace Capuchin
             this.RepoItems = repo.items;
             this.InstallPath = ExpandPath(repo.installpath);
             this.ApplicationName = repo.application;
+			
+			this.fillTagToPlugins ();
             
             this.OnUpdateFinished();
         }
@@ -173,7 +180,9 @@ namespace Capuchin
             return updates.ToArray();
         }        
         
-        /// <summary>Update the plugin with ID <code>plugin_id</code></summary>
+        /// <summary>
+        /// Update the plugin with ID <code>plugin_id</code>
+        /// </summary>
         /// <param name="plugin_id">Plugin's ID</param>
         public void Install (string plugin_id)
         {
@@ -189,17 +198,22 @@ namespace Capuchin
         }
         
         /// <summary>
-        /// Returns all plugins that are tagged with the given tag
+        /// Returns all plugins that are tagged with the given tag.
+        /// The method works case in-sensitive.
         /// </summary>
-        /// <param name="tag">
-        /// A tag
-        /// </param>
-        /// <returns>
-        /// A list of plugin IDs
-        /// </returns>
+        /// <param name="tag">A tag</param>
+        /// <returns>A list of plugin IDs</returns>
         public string[] GetPluginsWithTag (string tag)
         {
-            return null;   
+			tag = tag.Trim().ToLower ();
+			if (!this.TagToPlugins.ContainsKey (tag)) {
+				return new string[] {};
+			}
+			
+			List<string> pluginList = this.TagToPlugins[tag];
+			string[] plugins = new string[pluginList.Count];
+			pluginList.CopyTo (plugins, 0);
+            return plugins;
         }
         
         /// <summary>
@@ -231,17 +245,21 @@ namespace Capuchin
             }
         }
         
-        /// <summary>Get tags for the plugin with ID <code>plugin_id</code></summary>
+        /// <summary>
+        /// Get tags for the plugin with ID <code>plugin_id</code>
+        /// </summary>
         /// <param name="plugin_id">Plugin's ID</param>
         /// <returns>An array of tags</returns>
         public string[] GetPluginTags (string plugin_id)
         {
             Log.Info("Getting tags for plugin with id '{0}'", plugin_id);
             string[] tags = this.RepoItems[plugin_id].Tags;
-            return (tags == null) ? new string[] {""} : tags;
+            return (tags == null) ? new string[] {} : tags;
         }
         
-        /// <summary>Get the author's name and e-mail address for the plugin with ID <code>plugin_id</code></summary>
+        /// <summary>
+        /// Get the author's name and e-mail address for the plugin with ID <code>plugin_id</code>
+        /// </summary>
         /// <param name="plugin_id">Plugin's ID</param>
         /// <returns>Dictionary with keys "name" and "email"</returns>
         public string[] GetPluginAuthor (string plugin_id)
@@ -252,9 +270,16 @@ namespace Capuchin
             return new string[] { plugin_author.Name, plugin_author.Email };
         }
         
+		/// <summary>
+		/// Get all available tags available in this repository
+		/// </summary>
+		/// <returns>A list of tags</returns>
         public string[] GetTags ()
         {
-            return null;
+			ICollection<string> tagsCol = this.TagToPlugins.Keys;
+			string[] tags = new string[tagsCol.Count];
+			tagsCol.CopyTo (tags, 0);
+            return tags;
         }
         
         /// <summary>Tell the object that it isn't needed anymore</summary>
@@ -301,7 +326,7 @@ namespace Capuchin
         }
          
         /// <summary>Extract file</summary>
-        /// <param name="dlobject">A <see cref="Capuchin.Download" /> instance</param>   
+        /// <param name="local_file_obj">A <see cref="Capuchin.Download" /> instance</param>   
         protected void ExtractFile (object local_file_obj)
         {   
             string local_file = (string)local_file_obj;
@@ -315,7 +340,35 @@ namespace Capuchin
                 Log.Info("Deleting archive {0}", local_file);
                 File.Delete(local_file);
         }
+		
+		protected void fillTagToPlugins ()
+		{
+			this.TagToPlugins.Clear ();
+			
+			foreach (item itemEntry in this.RepoItems.Values)
+			{
+				this.addPluginToTags (itemEntry);
+			}
+		}
         
+		protected void addPluginToTags (item pluginItem)
+		{
+			if (pluginItem.Tags == null) return;
+			
+			foreach (string tag in pluginItem.Tags)
+			{
+				string lowertag = tag.Trim().ToLower ();
+				// Check if list for tag already exists
+				if (!this.TagToPlugins.ContainsKey (lowertag)) 
+				{
+					// Create new List
+					this.TagToPlugins.Add (lowertag, new List<string> ());
+				}
+				// Add plugin's id to list
+				this.TagToPlugins[lowertag].Add (pluginItem.Id);
+			}
+		}
+		
         protected void OnUpdateFinished ()
         {
             if (UpdateFinished != null)
@@ -348,7 +401,9 @@ namespace Capuchin
             }
         }
         
-        /// <summary>Check whether repository's XML file has to be downloaded again</summary>
+        /// <summary>
+        /// Check whether repository's XML file has to be downloaded again
+        /// </summary>
         /// <exception cref="Capuchin.RepositoryConnectionException">
         /// Thrown if connection to repository failed
         /// </exception>
