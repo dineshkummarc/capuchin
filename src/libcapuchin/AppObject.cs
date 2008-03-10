@@ -509,7 +509,6 @@ namespace Capuchin
         
         private void OnDownloadFinished (int dlid)
         {
-			Log.Info ("DA SAMER");
             if (dlid == this.repo_dlid) {
                 this.LoadRepository();
                 return;
