@@ -211,7 +211,7 @@ namespace Capuchin
         /// <returns>A list of plugin IDs</returns>
         public string[] GetPluginsWithTag (string tag)
         {
-			Log.Info ("Getting plugins with tag '{0}'", plugin_id);
+			Log.Info ("Getting plugins with tag '{0}'", tag);
 			
 			tag = tag.Trim().ToLower ();
 			if (!this.TagToPlugins.ContainsKey (tag)) {
