@@ -31,6 +31,7 @@ namespace Capuchin
         string GetPluginChanges (string plugin_id, string version);
         string[] GetPluginTags (string plugin_id);
         string[] GetPluginAuthor (string plugin_id);
+		string GetPluginVersion (string plugin_id);
         string[] GetTags ();
         void Close ();
     }

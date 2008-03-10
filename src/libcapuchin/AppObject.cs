@@ -14,13 +14,6 @@ using Capuchin.Xml;
 namespace Capuchin
 {
     
-    public class RepositoryConnectionException : ApplicationException
-    {
-        public RepositoryConnectionException() { }
-        public RepositoryConnectionException(string message) : base(message) { }
-        public RepositoryConnectionException(string message, Exception inner) : base(message, inner) { }
-    }
-    
     /// <summary>
 	/// An application specific object that handels the plugins
 	/// </summary>
@@ -91,6 +84,9 @@ namespace Capuchin
         
         /// <summary>Load the repository</summary>
         /// <param name="force_update">Force downloading repository's XML file</param>
+		/// <exception cref="Capuchin.RepositoryConnectionException">
+        /// Thrown if connection to repository failed
+        /// </exception>
         public void Update (bool force_update)
         {
             Log.Info("Refreshing");            
@@ -109,6 +105,7 @@ namespace Capuchin
         protected void LoadRepository ()
         {
             Log.Info("Deserializing XML file");
+			
             XmlSerializer ser = new XmlSerializer(typeof(Repository));
             
             FileStream repo_stream = new FileStream( this.LocalRepo, FileMode.Open );
@@ -130,6 +127,9 @@ namespace Capuchin
             this.OnUpdateFinished();
         }
         
+		/// <returns>
+		/// The name of the application the repository belongs to
+		/// </returns>
         public string GetApplicationName ()
         {
             return this.ApplicationName;
@@ -137,8 +137,7 @@ namespace Capuchin
         
         /// <summary>Get all plugins from the repository</summary>
         /// <returns>
-        /// An array of string arrays of size 2.
-        /// Whereas the first element is the plugin's id, second the plugin's name.
+        /// An array of plugin IDs
         /// </returns>
         public string[] GetAvailablePlugins ()
         {
@@ -158,18 +157,21 @@ namespace Capuchin
         /// <summary>Get all available updates</summary>
         /// <param name="plugins">
         /// An array consisting of string arrays of size 2.
-        /// The first element is the plugin's id and the second its version.
+        /// The first element is the plugin's ID and the second its version.
         /// </param>
         /// <returns>An array of strings containing plugin IDs</returns>
+		/// <exception cref="Capuchin.NoSuchPluginException">
+		/// Thrown when given plugin is not in the repository 
+		/// </exception>
         public string[] GetAvailableUpdates (string[][] plugins)
         {
             Log.Info("Getting updates");
             
             List<string> updates = new List<string>();
-            foreach (string[] p in plugins) {
-                string plugin_id = p[0];
-                if (!this.RepoItems.ContainsKey(plugin_id))
-                    continue;
+			foreach (string[] p in plugins)
+			{
+				string plugin_id = p[0];
+                this.PluginIdExists (plugin_id);
                 
                 string repo_version = this.RepoItems[plugin_id].Version;
                 if (AppObject.IsNewerVersion(repo_version, p[1]))
@@ -185,12 +187,15 @@ namespace Capuchin
         /// Update the plugin with ID <code>plugin_id</code>
         /// </summary>
         /// <param name="plugin_id">Plugin's ID</param>
+		/// <exception cref="Capuchin.NoSuchPluginException">
+		/// Thrown when given plugin is not in the repository 
+		/// </exception>
         public void Install (string plugin_id)
         {
-            if (!this.RepoItems.ContainsKey(plugin_id))
-                return;
             Log.Info("Updating plugin with id '{0}'", plugin_id);
             
+			this.PluginIdExists (plugin_id);
+			
             int dlid = Globals.DLM.DownloadFile(this.RepoItems[plugin_id].Url, this.InstallPath, this.RepoItems[plugin_id].Signature, this.RepoItems[plugin_id].Checksum);
             
             lock (this) {
@@ -206,6 +211,8 @@ namespace Capuchin
         /// <returns>A list of plugin IDs</returns>
         public string[] GetPluginsWithTag (string tag)
         {
+			Log.Info ("Getting plugins with tag '{0}'", plugin_id);
+			
 			tag = tag.Trim().ToLower ();
 			if (!this.TagToPlugins.ContainsKey (tag)) {
 				return new string[] {};
@@ -220,24 +227,45 @@ namespace Capuchin
         /// <summary>
         /// Get name of plugin with given <code>plugin_id</code>
         /// </summary>
+		/// <exception cref="Capuchin.NoSuchPluginException">
+		/// Thrown when given plugin is not in the repository 
+		/// </exception>
         public string GetPluginName (string plugin_id)
         {
+			Log.Info ("Getting name of plugin '{0}'", plugin_id);
+			
+			this.PluginIdExists (plugin_id);
+			
             return this.RepoItems[plugin_id].Name;
         }
         
         /// <summary>
         /// Get description for given <code>plugin_id</code>
         /// </summary>
+		/// <exception cref="Capuchin.NoSuchPluginException">
+		/// Thrown when given plugin is not in the repository 
+		/// </exception>
         public string GetPluginDescription (string plugin_id)
         {
+			Log.Info ("Getting description of plugin '{0}'", plugin_id);
+			
+			this.PluginIdExists (plugin_id);
+			
             return this.RepoItems[plugin_id].Description;   
         }
         
         /// <summary>
         /// Get changes for plugin with given ID made in given version
         /// </summary>
+		/// <exception cref="Capuchin.NoSuchPluginException">
+		/// Thrown when given plugin is not in the repository 
+		/// </exception>
         public string GetPluginChanges (string plugin_id, string version)
         {
+			Log.Info ("Getting changes in version {0} of plugin '{1}'", version, plugin_id); 
+			
+			this.PluginIdExists (plugin_id);
+			
 			changelog changes = this.RepoItems[plugin_id].Changelog;
             if (changes != null && changes.ContainsKey (version))
             {
@@ -252,9 +280,15 @@ namespace Capuchin
         /// </summary>
         /// <param name="plugin_id">Plugin's ID</param>
         /// <returns>An array of tags</returns>
+		/// <exception cref="Capuchin.NoSuchPluginException">
+		/// Thrown when given plugin is not in the repository 
+		/// </exception>
         public string[] GetPluginTags (string plugin_id)
         {
             Log.Info("Getting tags for plugin with id '{0}'", plugin_id);
+			
+			this.PluginIdExists (plugin_id);
+			
             string[] tags = this.RepoItems[plugin_id].Tags;
             return (tags == null) ? new string[] {} : tags;
         }
@@ -263,21 +297,45 @@ namespace Capuchin
         /// Get the author's name and e-mail address for the plugin with ID <code>plugin_id</code>
         /// </summary>
         /// <param name="plugin_id">Plugin's ID</param>
-        /// <returns>Dictionary with keys "name" and "email"</returns>
+        /// <returns>
+        /// An array whereas the first entry ist the author's name
+        /// and the second entry the author's e-mail
+        /// </returns>
+		/// <exception cref="Capuchin.NoSuchPluginException">
+		/// Thrown when given plugin is not in the repository 
+		/// </exception>
         public string[] GetPluginAuthor (string plugin_id)
         {
             Log.Info("Getting author of plugin with id '{0}'", plugin_id);
             
+			this.PluginIdExists (plugin_id);
+			
             author plugin_author = this.RepoItems[plugin_id].Author;
             return new string[] { plugin_author.Name, plugin_author.Email };
         }
         
+		/// <param name="plugin_id">Plugin's ID</param>
+		/// <returns>The version of the plugin</returns>
+		/// <exception cref="Capuchin.NoSuchPluginException">
+		/// Thrown when given plugin is not in the repository 
+		/// </exception>
+		public string GetPluginVersion (string plugin_id)
+		{
+			Log.Info ("Getting version of plugin {0}", plugin_id);
+			
+			this.PluginIdExists (plugin_id);
+			
+			return this.RepoItems[plugin_id].Version;
+		}
+		
 		/// <summary>
 		/// Get all available tags available in this repository
 		/// </summary>
 		/// <returns>A list of tags</returns>
         public string[] GetTags ()
         {
+			Log.Info ("Getting all tags in the repository");
+			
 			ICollection<string> tagsCol = this.TagToPlugins.Keys;
 			string[] tags = new string[tagsCol.Count];
 			tagsCol.CopyTo (tags, 0);
@@ -368,6 +426,13 @@ namespace Capuchin
 				}
 				// Add plugin's id to list
 				this.TagToPlugins[lowertag].Add (pluginItem.Id);
+			}
+		}
+		
+		protected void PluginIdExists (string plugin_id)
+		{
+			if (!this.RepoItems.ContainsKey (plugin_id)) {
+				throw new NoSuchPluginException ("The repository does not contain a plugin with ID "+plugin_id);
 			}
 		}
 		
