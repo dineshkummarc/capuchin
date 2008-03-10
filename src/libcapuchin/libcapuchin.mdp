@@ -16,12 +16,6 @@
   <Contents>
     <File name="AppObject.cs" subtype="Code" buildaction="Compile" />
     <File name="AppObjectManager.cs" subtype="Code" buildaction="Compile" />
-    <File name="Compression/Decompresser.cs" subtype="Code" buildaction="Compile" />
-    <File name="Compression/IExtracter.cs" subtype="Code" buildaction="Compile" />
-    <File name="Compression/TarBz2Extracter.cs" subtype="Code" buildaction="Compile" />
-    <File name="Compression/TarGzExtracter.cs" subtype="Code" buildaction="Compile" />
-    <File name="Compression/TarExtracter.cs" subtype="Code" buildaction="Compile" />
-    <File name="Compression/ZipExtracter.cs" subtype="Code" buildaction="Compile" />
     <File name="Verification/ChecksumVerifier.cs" subtype="Code" buildaction="Compile" />
     <File name="Verification/GnuPGVerifier.cs" subtype="Code" buildaction="Compile" />
     <File name="Verification/IVerifier.cs" subtype="Code" buildaction="Compile" />
@@ -45,6 +39,16 @@
     <File name="Xml/checksum.cs" subtype="Code" buildaction="Compile" />
     <File name="Xml/author.cs" subtype="Code" buildaction="Compile" />
     <File name="IDownloadManager.cs" subtype="Code" buildaction="Compile" />
+    <File name="Installation" subtype="Directory" buildaction="Compile" />
+    <File name="Installation/Compression/Decompresser.cs" subtype="Code" buildaction="Compile" />
+    <File name="Installation/Compression/IExtracter.cs" subtype="Code" buildaction="Compile" />
+    <File name="Installation/Compression/TarBz2Extracter.cs" subtype="Code" buildaction="Compile" />
+    <File name="Installation/Compression/TarExtracter.cs" subtype="Code" buildaction="Compile" />
+    <File name="Installation/Compression/TarGzExtracter.cs" subtype="Code" buildaction="Compile" />
+    <File name="Installation/Compression/ZipExtracter.cs" subtype="Code" buildaction="Compile" />
+    <File name="Installation/IInstaller.cs" subtype="Code" buildaction="Compile" />
+    <File name="Installation/Simple" subtype="Directory" buildaction="Compile" />
+    <File name="Installation/Simple/SimpleInstaller.cs" subtype="Code" buildaction="Compile" />
   </Contents>
   <References>
     <ProjectReference type="Gac" localcopy="True" refto="gnome-vfs-sharp, Version=2.8.0.0, Culture=neutral, PublicKeyToken=35e10195dab3c99f" />

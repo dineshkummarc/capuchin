@@ -6,7 +6,8 @@ using System.Xml;
 using System.Xml.Serialization;
 using System.Threading;
 using Capuchin.Verification;
-using Capuchin.Compression;
+using Capuchin.Installation;
+using Capuchin.Installation.Simple;
 using Capuchin.Logging;
 using Capuchin.Xml;
 
@@ -237,7 +238,8 @@ namespace Capuchin
         /// </summary>
         public string GetPluginChanges (string plugin_id, string version)
         {
-            if (this.RepoItems[plugin_id].Changelog.ContainsKey (version))
+			changelog changes = this.RepoItems[plugin_id].Changelog;
+            if (changes != null && changes.ContainsKey (version))
             {
                 return this.RepoItems[plugin_id].Changelog[version];
             } else {
@@ -296,6 +298,8 @@ namespace Capuchin
         /// <param name="checksumField">Checksum information</param>
         internal void CheckFile (string local_file, string signature, checksum checksumField)
         {
+			Log.Info ("Checking file");
+			
             if (checksumField != null)
             {
                 FileStream fs = new FileStream( local_file, FileMode.Open );
@@ -325,20 +329,18 @@ namespace Capuchin
             }
         }
          
-        /// <summary>Extract file</summary>
-        /// <param name="local_file_obj">A <see cref="Capuchin.Download" /> instance</param>   
-        protected void ExtractFile (object local_file_obj)
+        /// <summary>Actually install the file</summary>
+        /// <param name="local_file_obj">
+		/// A <see cref="System.String" /> where the file is located
+		/// </param>   
+        protected void InstallFileReal (object local_file_obj)
         {   
+			Log.Info ("Installing file");
+			
             string local_file = (string)local_file_obj;
 
-            Log.Info("Decompressing {0} to {1}", local_file, this.InstallPath);            
-            
-            Decompresser decomp = new Decompresser(local_file, this.InstallPath);
-            decomp.Run();
-         
-            if (decomp.DeleteFile)
-                Log.Info("Deleting archive {0}", local_file);
-                File.Delete(local_file);
+			IInstaller installer = new SimpleInstaller (this.InstallPath);
+			installer.InstallFile (local_file);
         }
 		
 		protected void fillTagToPlugins ()
@@ -421,7 +423,7 @@ namespace Capuchin
                 wresp.Close();
                 return (File.GetLastWriteTime(this.LocalRepo) >= remoteModTime);
             } catch (WebException e) {
-                throw new RepositoryConnectionException("Connection to repository "+this.RepositoryURL+" failed", e);
+				throw new RepositoryConnectionException("Connection to repository "+this.RepositoryURL+" failed: "+e.Message, e);
             }
         }
             
@@ -442,6 +444,7 @@ namespace Capuchin
         
         private void OnDownloadFinished (int dlid)
         {
+			Log.Info ("DA SAMER");
             if (dlid == this.repo_dlid) {
                 this.LoadRepository();
                 return;
@@ -459,10 +462,10 @@ namespace Capuchin
             // Check file
             this.CheckFile(local_file, this.RepoItems[plugin_id].Signature, this.RepoItems[plugin_id].Checksum);
             
-            // Extract archive
-            Thread extractThread = new Thread( new ParameterizedThreadStart( this.ExtractFile ) );
-            extractThread.Start( local_file );            
-            while (extractThread.IsAlive)
+            // Install file
+            Thread installThread = new Thread( new ParameterizedThreadStart( this.InstallFileReal ) );
+			installThread.Start( local_file );
+            while (installThread.IsAlive)
             {
                 this.OnStatus( ActionType.ExtractingPlugin, plugin_id, -1.0, -1);
                 Thread.Sleep(SLEEP_TIME);

@@ -4,12 +4,14 @@ libcapuchin_SCRIPTS = capuchin-sharp.dll
 libcapuchin_sources_in = AssemblyInfo.cs.in Globals.cs.in
 libcapuchin_generated_sources = $(libcapuchin_sources_in:.in=)
 libcapuchin_sources = \
-	Compression/Decompresser.cs \
-	Compression/IExtracter.cs \
-	Compression/TarBz2Extracter.cs \
-	Compression/TarGzExtracter.cs \
-	Compression/ZipExtracter.cs \
-	Compression/TarExtracter.cs \
+	Installation/Compression/Decompresser.cs \
+	Installation/Compression/IExtracter.cs \
+	Installation/Compression/TarBz2Extracter.cs \
+	Installation/Compression/TarGzExtracter.cs \
+	Installation/Compression/ZipExtracter.cs \
+	Installation/Compression/TarExtracter.cs \
+	Installation/Simple/SimpleInstaller.cs \
+	Installation/IInstaller.cs \
 	Downloaders/AbstractDownloader.cs \
 	Downloaders/HttpDownloader.cs \
 	Logging/DelayedTextWriter.cs \

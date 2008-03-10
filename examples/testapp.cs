@@ -53,32 +53,46 @@ public class TestCapuchin
 		Console.WriteLine ("ALL:");
 		foreach (string s in stuff)
 		{
-			Console.WriteLine ("ID: " + s);
-            Console.WriteLine ("Name: " + this.appobject.GetName(s));
-            Console.WriteLine ("Description: " + this.appobject.GetDescription(s) );
-            string[] author = this.appobject.GetAuthor(s);
-            Console.WriteLine ("Author: {0} <{1}>", author[0], author[1]);
+			this.printPluginInfos (s);
 		}
+	}
+	
+	private void printPluginInfos (string s) {
+		Console.WriteLine ("ID: " + s);
+        Console.WriteLine ("Name: " + this.appobject.GetPluginName(s));
+        Console.WriteLine ("Description: " + this.appobject.GetPluginDescription(s) );
+        string[] author = this.appobject.GetPluginAuthor(s);
+        Console.WriteLine ("Author: {0} <{1}>", author[0], author[1]);
+		string[] tags = this.appobject.GetPluginTags(s);
+		Console.WriteLine ("TAGS for {0}:", s);
+		foreach (string t in tags)
+		{
+			Console.WriteLine (t);
+		}
+		Console.WriteLine();
 	}
 	
 	public void testGetAvailableUpdates()
 	{
 		string[][] plugins = new string[2][];
-		plugins[0] = new string[] {"leoorg.py", "0.2.0"};
-		plugins[1] = new string[] {"ssh.py", "0.0.9"};
+		plugins[0] = new string[] {"ssh.py", "0.0.9"};
+		plugins[1] = new string[] {"ekiga.py", "0.1.0"};
 		
 		string[] updates = this.appobject.GetAvailableUpdates (plugins);
 		Console.WriteLine ("UPDATES:");
 		foreach (string s in updates)
 		{
 			Console.WriteLine (s);
-            Console.WriteLine ("Changes: " + this.appobject.GetChanges(s, "1.1.0.0"));
+            Console.WriteLine ("Changes: " + this.appobject.GetPluginChanges(s, "1.1.0.0"));
 		}
 	}
 	
-	public void testGetTags()
-	{
-		string[] tags = this.appobject.GetTags("leoorg.py");
+    public void testGetApplicationName () {
+        Console.WriteLine ("APPLICATION-NAME: {0}", this.appobject.GetApplicationName ());
+    }
+	
+	public void testGetTags () {
+		string[] tags = this.appobject.GetTags ();
 		Console.WriteLine ("TAGS:");
 		foreach (string t in tags)
 		{
@@ -86,19 +100,17 @@ public class TestCapuchin
 		}
 	}
 	
-	public void testGetAuthor()
-	{
-		string[] author = this.appobject.GetAuthor("leoorg.py");
-		Console.WriteLine ("AUTHOR: {0}, {1}", author[0], author[1]);
+	public void testGetPluginsWithTag () {
+		Console.WriteLine("PLUGINS WITH TAG:");
+		string[] ids = this.appobject.GetPluginsWithTag ("phone");
+		foreach (string id in ids) {
+			this.printPluginInfos (id);
+		}
 	}
-    
-    public void testGetApplicationName () {
-        Console.WriteLine ("APPLICATION-NAME: {0}", this.appobject.GetApplicationName ());
-    }
 	
 	public void testInstall()
 	{
-		this.appobject.Install("leoorg.py");
+		this.appobject.Install("ekiga.py");
 	}
 	
 	public void testClose()
@@ -111,10 +123,10 @@ public class TestCapuchin
         test.testGetApplicationName();
         test.testGetAvailablePlugins();
 		test.testGetAvailableUpdates();
-		test.testGetTags();
-		test.testGetAuthor();
+		test.testGetTags ();
+		test.testGetPluginsWithTag ();
 		test.testInstall();
-		Thread.Sleep(5000); // Wait 5s for update to complete, because we have no mainloop
+		Thread.Sleep(10000); // Wait 5s for update to complete, because we have no mainloop
 		test.testClose();
 	}
 	

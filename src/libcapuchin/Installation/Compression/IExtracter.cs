@@ -1,7 +1,7 @@
 
 using System;
 
-namespace Capuchin.Compression
+namespace Capuchin.Installation.Compression
 {
     internal interface IExtracter
     {

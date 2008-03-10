@@ -3,7 +3,7 @@ using System;
 using System.IO;
 using ICSharpCode.SharpZipLib.GZip;
 
-namespace Capuchin.Compression
+namespace Capuchin.Installation.Compression
 {
     
     
