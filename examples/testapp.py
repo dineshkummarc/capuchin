@@ -3,80 +3,106 @@
 import gobject
 import dbus, dbus.glib
 
-NEW_STUFF_SERVICE = 'org.gnome.NewStuffManager'
-NEW_STUFF_IFACE = 'org.gnome.NewStuffManager.NewStuff'
-NEW_STUFF_MANAGER_IFACE = 'org.gnome.NewStuffManager'
-NEW_STUFF_MANAGER_PATH = '/org/gnome/NewStuffManager'
+REPO_URL = "http://www.k-d-w.org/clipboard/deskbar/deskbar.xml"
+
+CAPUCHIN_SERVICE = "org.gnome.Capuchin"
+APPOBJECTMANAGER_PATH = "/org/gnome/Capuchin/AppObjectManager"
+APPOBJECTMANAGER_IFACE = "org.gnome.Capuchin"
+APPOBJECT_IFACE = "org.gnome.Capuchin.AppObject"
 
 # We define some plugins here
-PLUGINS = [('leoorg.py', '0.1.0'), # id, version
+PLUGINS = [('ekiga.py', '0.1.0'), # id, version
            ('yahoo.py', '0.3.0'),
            ('gmail-deskbar-hack.py', '0.99.9.99'),
           ]
-
-def global_error_handler(e):
-    print "DBUS ERROR:", e
 
 class TestApp:
     
     def __init__(self):
         bus = dbus.SessionBus()
-        # Get proxy object of NewStuffManager
-        proxy_obj_manager = bus.get_object(NEW_STUFF_SERVICE, NEW_STUFF_MANAGER_PATH)
+        # Get proxy object
+        proxy_obj_manager = bus.get_object(CAPUCHIN_SERVICE, APPOBJECTMANAGER_PATH)
         # Apply the correct interace to the proxy object
-        self.newstuffmanager = dbus.Interface(proxy_obj_manager, NEW_STUFF_MANAGER_IFACE)
+        self.appobjectmanager = dbus.Interface(proxy_obj_manager, APPOBJECTMANAGER_IFACE)
         
-        object_path = self.newstuffmanager.GetNewStuff('deskbarapplet') # deskbarapplet = <your_application_name>
+        object_path = self.appobjectmanager.GetAppObject(REPO_URL)
         
-        proxy_obj_stuff = bus.get_object(NEW_STUFF_SERVICE, object_path)
-        self.newstuff = dbus.Interface(proxy_obj_stuff, NEW_STUFF_IFACE)
+        proxy_obj = bus.get_object(CAPUCHIN_SERVICE, object_path)
+        self.appobject = dbus.Interface(proxy_obj, APPOBJECT_IFACE)
         
-        self.newstuff.connect_to_signal('Updated', self.on_newstuff_updated)
-        self.newstuff.connect_to_signal('DownloadStatus', self.on_download_status)
+        self.appobject.connect_to_signal('InstallFinished', self.on_install_finished)
+        self.appobject.connect_to_signal('Status', self.on_status)
+        self.appobject.connect_to_signal('UpdateFinished', self.on_update_finished)
         
-    def on_newstuff_updated(self, plugin_id):
-        print "NewStuff updated:", plugin_id
-	self.newstuff.Close() # We did everything we wanted to
+    def on_install_finished(self, plugin_id):
+        print "appobject updated: %s" % plugin_id
+        
+    def on_update_finished(self):
+        self.testGetApplicationName();
+        self.testGetAvailablePlugins();
+        self.testGetAvailableUpdates();
+        self.testGetTags ();
+        self.testGetPluginsWithTag ();
+        self.testInstall ();
+        
+    def on_install_finished(self, plugin_id):
+        print "appobject updated: %s" % plugin_id
+        self.appobject.Close() # We did everything we wanted to
 	
-    def on_download_status(self, action, progress):
-        # Progress is either between 0.0 and 1.0 while downloading
-        # or -1.0 while extracting to point out that the exact progress
-        # is unknown. A gtk.ProgressBar should pulse here.
-        print "Current action: %s, progress: %s" % (action, progress)
+    def on_status(self, action, plugin_id, progress, speed):
+        print "DOWNLOAD: %s %s %s %s" % (action, plugin_id, progress, speed)
         
-    def load_repo(self):
-        self.newstuff.Refresh()
+    def testUpdate(self):
+        self.appobject.Update(False)
         
-    def get_all(self):
-        def reply_GetAvailableNewStuff(newstuff):
-            print "The following stuff is available:"
-            for plugin_id, name, desc in newstuff:
-                print "ID: %s, NAME: %s, DESCRIPTION: %s" % (plugin_id, name, desc)
-            print
-        self.newstuff.GetAvailableNewStuff(reply_handler=reply_GetAvailableNewStuff, error_handler=global_error_handler)
+    def testGetAvailablePlugins(self):
+        stuff = self.appobject.GetAvailablePlugins();
+        print "ALL:"
+        for s in stuff:
+            self.printPluginInfos (s)
+			
+    def printPluginInfos(self, s):
+        print "ID: " + s
+        print "Name: " + self.appobject.GetPluginName(s)
+        print "Description: " + self.appobject.GetPluginDescription(s)
+        author = self.appobject.GetPluginAuthor(s)
+        print "Author: %s <%s>" % (author[0], author[1])
+        tags = self.appobject.GetPluginTags(s);
+        print "TAGS for %s:" % s
+        for t in tags:
+	        print t
+        print
         
-    def get_updates(self):
-         def reply_GetAvailableUpdates(updates):
-            available_updates = []
-            print "The following updates are available:"
-            for plugin_id, desc in updates:
-                available_updates.append(plugin_id)
-                print "ID: %s, DESC: %s" % (plugin_id, desc)
-            print
-            self.update_plugins(available_updates)
-         self.newstuff.GetAvailableUpdates(PLUGINS, reply_handler=reply_GetAvailableUpdates, error_handler=global_error_handler)
+    def testGetApplicationName(self):
+        print "APPLICATION-NAME: "+ self.appobject.GetApplicationName ()
         
-    def update_plugins(self, available_updates):
-        for plugin_id in available_updates:
-            print "Starting update for %s" % plugin_id
-            self.newstuff.Update(plugin_id)
-              
+    def testGetAvailableUpdates(self):
+        updates = self.appobject.GetAvailableUpdates (PLUGINS)
+        print "UPDATES:"
+        for s in updates:
+            print s
+            print "Changes: "+self.appobject.GetPluginChanges(s, "1.1.0.0")
+            
+    def testGetTags(self):
+        tags = self.appobject.GetTags ()
+        print "TAGS:"
+        for t in tags:
+            print t
+            
+    def testGetPluginsWithTag(self):
+        print "PLUGINS WITH TAG:"
+        ids = self.appobject.GetPluginsWithTag ("phone")
+        for i in ids:
+            print self.printPluginInfos (i)
+            
+    def testInstall(self):
+        self.appobject.Install("ekiga.py")
+    
 if __name__=='__main__':
     gobject.threads_init()
     dbus.glib.init_threads()
     mainloop = gobject.MainLoop()
     app = TestApp()
-    app.load_repo()
-    app.get_all()
-    app.get_updates()
+    app.testUpdate ()
+    
     mainloop.run()
