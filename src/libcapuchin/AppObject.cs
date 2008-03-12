@@ -37,8 +37,8 @@ namespace Capuchin
         
         private const int SLEEP_TIME = 500;
         private bool disposed = false;
-        private int repo_dlid = -1; 
-        
+        private int repo_dlid = -1;
+		
         /// <param name="repository_url">URL to repository's XML file</param>
         public AppObject (string repository_url)
         {
@@ -130,8 +130,13 @@ namespace Capuchin
 		/// <returns>
 		/// The name of the application the repository belongs to
 		/// </returns>
+		/// <exception cref="Capuchin.RepositoryNotInitializedException">
+		/// Thrown when the Update method hasn't been called before
+		/// </exception>
         public string GetApplicationName ()
         {
+			this.RepoInitialized ();
+			
             return this.ApplicationName;
         }       
         
@@ -139,9 +144,14 @@ namespace Capuchin
         /// <returns>
         /// An array of plugin IDs
         /// </returns>
+		/// <exception cref="Capuchin.RepositoryNotInitializedException">
+		/// Thrown when the Update method hasn't been called before
+		/// </exception>
         public string[] GetAvailablePlugins ()
         {
             Log.Info("Getting available plugins");
+			
+			this.RepoInitialized ();
             
             string[] ids = new string[this.RepoItems.Count];
             int c=0;
@@ -163,9 +173,14 @@ namespace Capuchin
 		/// <exception cref="Capuchin.NoSuchPluginException">
 		/// Thrown when given plugin is not in the repository 
 		/// </exception>
+		/// <exception cref="Capuchin.RepositoryNotInitializedException">
+		/// Thrown when the Update method hasn't been called before
+		/// </exception>
         public string[] GetAvailableUpdates (string[][] plugins)
         {
             Log.Info("Getting updates");
+			
+			this.RepoInitialized ();
             
             List<string> updates = new List<string>();
 			foreach (string[] p in plugins)
@@ -190,10 +205,14 @@ namespace Capuchin
 		/// <exception cref="Capuchin.NoSuchPluginException">
 		/// Thrown when given plugin is not in the repository 
 		/// </exception>
+		/// <exception cref="Capuchin.RepositoryNotInitializedException">
+		/// Thrown when the Update method hasn't been called before
+		/// </exception>
         public void Install (string plugin_id)
         {
             Log.Info("Updating plugin with id '{0}'", plugin_id);
             
+			this.RepoInitialized ();
 			this.PluginIdExists (plugin_id);
 			
             int dlid = Globals.DLM.DownloadFile(this.RepoItems[plugin_id].Url, this.InstallPath, this.RepoItems[plugin_id].Signature, this.RepoItems[plugin_id].Checksum);
@@ -209,9 +228,14 @@ namespace Capuchin
         /// </summary>
         /// <param name="tag">A tag</param>
         /// <returns>A list of plugin IDs</returns>
+		/// <exception cref="Capuchin.RepositoryNotInitializedException">
+		/// Thrown when the Update method hasn't been called before
+		/// </exception>
         public string[] GetPluginsWithTag (string tag)
         {
 			Log.Info ("Getting plugins with tag '{0}'", tag);
+			
+			this.RepoInitialized ();
 			
 			tag = tag.Trim().ToLower ();
 			if (!this.TagToPlugins.ContainsKey (tag)) {
@@ -230,10 +254,14 @@ namespace Capuchin
 		/// <exception cref="Capuchin.NoSuchPluginException">
 		/// Thrown when given plugin is not in the repository 
 		/// </exception>
+		/// <exception cref="Capuchin.RepositoryNotInitializedException">
+		/// Thrown when the Update method hasn't been called before
+		/// </exception>
         public string GetPluginName (string plugin_id)
         {
 			Log.Info ("Getting name of plugin '{0}'", plugin_id);
 			
+			this.RepoInitialized ();
 			this.PluginIdExists (plugin_id);
 			
             return this.RepoItems[plugin_id].Name;
@@ -245,10 +273,14 @@ namespace Capuchin
 		/// <exception cref="Capuchin.NoSuchPluginException">
 		/// Thrown when given plugin is not in the repository 
 		/// </exception>
+		/// <exception cref="Capuchin.RepositoryNotInitializedException">
+		/// Thrown when the Update method hasn't been called before
+		/// </exception>
         public string GetPluginDescription (string plugin_id)
         {
 			Log.Info ("Getting description of plugin '{0}'", plugin_id);
 			
+			this.RepoInitialized ();
 			this.PluginIdExists (plugin_id);
 			
             return this.RepoItems[plugin_id].Description;   
@@ -260,10 +292,14 @@ namespace Capuchin
 		/// <exception cref="Capuchin.NoSuchPluginException">
 		/// Thrown when given plugin is not in the repository 
 		/// </exception>
+		/// <exception cref="Capuchin.RepositoryNotInitializedException">
+		/// Thrown when the Update method hasn't been called before
+		/// </exception>
         public string GetPluginChanges (string plugin_id, string version)
         {
 			Log.Info ("Getting changes in version {0} of plugin '{1}'", version, plugin_id); 
 			
+			this.RepoInitialized ();
 			this.PluginIdExists (plugin_id);
 			
 			changelog changes = this.RepoItems[plugin_id].Changelog;
@@ -283,10 +319,14 @@ namespace Capuchin
 		/// <exception cref="Capuchin.NoSuchPluginException">
 		/// Thrown when given plugin is not in the repository 
 		/// </exception>
+		/// <exception cref="Capuchin.RepositoryNotInitializedException">
+		/// Thrown when the Update method hasn't been called before
+		/// </exception>
         public string[] GetPluginTags (string plugin_id)
         {
             Log.Info("Getting tags for plugin with id '{0}'", plugin_id);
 			
+			this.RepoInitialized ();
 			this.PluginIdExists (plugin_id);
 			
             string[] tags = this.RepoItems[plugin_id].Tags;
@@ -304,10 +344,14 @@ namespace Capuchin
 		/// <exception cref="Capuchin.NoSuchPluginException">
 		/// Thrown when given plugin is not in the repository 
 		/// </exception>
+		/// <exception cref="Capuchin.RepositoryNotInitializedException">
+		/// Thrown when the Update method hasn't been called before
+		/// </exception>
         public string[] GetPluginAuthor (string plugin_id)
         {
             Log.Info("Getting author of plugin with id '{0}'", plugin_id);
             
+			this.RepoInitialized ();
 			this.PluginIdExists (plugin_id);
 			
             author plugin_author = this.RepoItems[plugin_id].Author;
@@ -319,10 +363,14 @@ namespace Capuchin
 		/// <exception cref="Capuchin.NoSuchPluginException">
 		/// Thrown when given plugin is not in the repository 
 		/// </exception>
+		/// <exception cref="Capuchin.RepositoryNotInitializedException">
+		/// Thrown when the Update method hasn't been called before
+		/// </exception>
 		public string GetPluginVersion (string plugin_id)
 		{
 			Log.Info ("Getting version of plugin {0}", plugin_id);
 			
+			this.RepoInitialized ();
 			this.PluginIdExists (plugin_id);
 			
 			return this.RepoItems[plugin_id].Version;
@@ -332,9 +380,14 @@ namespace Capuchin
 		/// Get all available tags available in this repository
 		/// </summary>
 		/// <returns>A list of tags</returns>
+		/// <exception cref="Capuchin.RepositoryNotInitializedException">
+		/// Thrown when the Update method hasn't been called before
+		/// </exception>
         public string[] GetTags ()
         {
 			Log.Info ("Getting all tags in the repository");
+			
+			this.RepoInitialized ();
 			
 			ICollection<string> tagsCol = this.TagToPlugins.Keys;
 			string[] tags = new string[tagsCol.Count];
@@ -433,6 +486,13 @@ namespace Capuchin
 		{
 			if (!this.RepoItems.ContainsKey (plugin_id)) {
 				throw new NoSuchPluginException ("The repository does not contain a plugin with ID "+plugin_id);
+			}
+		}
+		
+		protected void RepoInitialized ()
+		{
+			if (this.RepoItems == null) {
+				throw new RepositoryNotInitializedException ("The repository is not initialized. You have to call Update first.");
 			}
 		}
 		
