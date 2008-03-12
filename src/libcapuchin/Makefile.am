@@ -35,6 +35,7 @@ libcapuchin_sources = \
 	IAppObjectManager.cs \
 	IDownloadManager.cs	 \
 	RepositoryConnectionException.cs \
+	RepositoryNotInitializedException.cs \
 	NoSuchPluginException.cs
 
 REFERENCES =  \
