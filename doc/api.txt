@@ -1,45 +1,55 @@
-NewStuffManager API
-===================
+Capuchin API documentation
+==========================
 Sebastian Pölsterl
+v1.0.0, March 12th, 2008
 
-API documentation for NewStuffManager
+API documentation for Capuchin D-Bus API and XML file format
 
 [[dbus]]
 D-Bus API
 ---------
 
-* *Service:* org.gnome.NewStuffManager
+* *Service:* org.gnome.Capuchin
 
-[[NewStuffManager]]
-=== NewStuffManager
+[[AppObjectManager]]
+AppObjectManager
+~~~~~~~~~~~~~~~~
 
-* *Interface:* org.gnome.NewStuffManager
-* *Object's path:* /org/gnome/NewStuffManager
+* *Interface:* org.gnome.AppObjectManager
+* *Object's path:* /org/gnome/Capuchin/AppObjectManager
 
-[[NewStuffManager-methods]]
-==== Methods
+[[AppObjectManager-methods]]
+Methods
+^^^^^^^
 
-- `GetNewStuff (application_name : STRING) : OBJECT_PATH`
-    * `application_name` must be equivalent to a Python file in '$\{pkgdatadir\}/new-stuff-manager/specs' except the '.conf' suffix.
-    * The return value is of the form '/org/gnome/NewStuffManager/`<application_name>`'
+- `GetAppObject (repository_url : STRING) : OBJECT_PATH`
+    * `repository_url` is the URL of the repository's XML file
+    * The return value is of the form '/org/gnome/Capuchin/`<application_name>`'
 
-[[NewStuff]] 
-=== NewStuff
+[[AppObject]] 
+AppObject
+~~~~~~~~~
 
-* *Interface:* org.gnome.NewStuffManager.NewStuff
-* *Object's path:* Path as returned by <<NewStuffManager,NewStuffManager>>.GetNewStuff()
+* *Interface:* org.gnome.Capuchin.AppObject
+* *Object's path:* Path as returned by <<AppObjectManager,AppObjectManager>>.GetAppObject()
 
-[[NewStuff-signals]] 
-==== Signals
+[[AppObject-signals]] 
+Signals
+^^^^^^^
 
-- `DownloadStatus (action : STRING, progress : DOUBLE)`
+- `UpdateFinished ()`
+    * Emited when the repository has been initialized after calling <<AppObject,AppObject>>.Update()
+- `Status (action : STRING, plugin_id : STRING, progress : DOUBLE, speed : INTEGER)`
     * `action`: Current action (e.g. Downloading, Extracting)
-    * `progress`: The fraction of the progress that's complete, or -1.0 if no information is available on how long it will take
-- `Updated (plugin_id : STRING)`
+    * `plugin_id`: The ID of the plugin that the status is related to
+    * `progress`: The fraction of the progress that's complete (from 0 to 1), or -1.0 if no information is available on how long it will take
+    * `speed`: Download speed
+- `InstallFinished (plugin_id : STRING)`
     * Emited when the plugin has been downloaded and unpacked and is ready to be (re-)loaded by the application
 
-[[NewStuff-methods]] 
-==== Methods
+[[AppObject-methods]] 
+Methods
+^^^^^^^
 
 [IMPORTANT]
 =======================================
@@ -47,59 +57,99 @@ The `version` attribute is of type STRING and must look like `<major>.<minor>.<b
 Furthermore, `plugin_id` must be a unique identifier that is known by the application.
 =======================================
 
-- `Refresh ()`
-    * Load the repository
-- `GetAvailableNewStuff () : ARRAY(plugin_id : STRING, name : STRING, description: STRING)`
-    * Get all plugins from the repository
-- `GetAvailableUpdates (plugins : ARRAY(plugin_id: STRING, version : STRING)) : ARRAY(plugin_id : STRING, description : STRING)`
+- `Update ()`
+    * Load and initialize the repository
+    * Emits the `UpdateFinished` signal when the update is complete
+    * Throws `RepositoryConnectionException` when the connection to the repository failed
+- `GetAvailablePlugins () : ARRAY(plugin_id : STRING)`
+    * Get the ID of all plugins in the repository
+    * Throws `RepositoryNotInitializedException` when `Update ()` hasn't been called before
+- `GetAvailableUpdates (plugins : ARRAY(plugin_id: STRING, version : STRING)) : ARRAY(plugin_id : STRING)`
     * Get all available updates
     * `plugins` is an array that consists of the ID and the version for each plugin
-    * Retursn an array that contains the ID and description for each plugin
-- `Update (plugin_id : STRING)`
+    * Returns an array that contains the ID for each plugin
+    * Throws `RepositoryNotInitializedException` when `Update ()` hasn't been called before
+    * Throws `NoSuchPluginException` when the given plugin is not in the repository
+- `Install (plugin_id : STRING)`
     * Update the plugin with ID `plugin_id`
     * This method will download the file and extract the archive, if neccessary.
     * In addition, it makes a checksum test, if the checksum is provided and verifies a GnuPG signature, if the signature is provided.
-    * During the download the `DownloadStatus` signal will be emited
-    * The method emits the `Updated` signal when it has finished installing the new plugin
-- `GetTags (plugin_id : STRING) : ARRAY(STRING)`
-    * Get tags for the plugin with ID `plugin_id`
-- `GetAuthor` (plugin_id : STRING) : DICT{name : STRING, email : STRING}
+    * During the download the `Status` signal will be emited
+    * The method emits the `InstallFinished` signal when it has finished installing the new plugin
+    * Throws `RepositoryNotInitializedException` when `Update ()` hasn't been called before
+    * Throws `NoSuchPluginException` when the given plugin is not in the repository
+- `GetPluginAuthor (plugin_id : STRING) : ARRAY(name : STRING, email : STRING}`
     * Get the author's name and e-mail address for the plugin with ID `plugin_id`
+    * Throws `RepositoryNotInitializedException` when `Update ()` hasn't been called before
+    * Throws `NoSuchPluginException` when the given plugin is not in the repository
+- `GetPluginChanges (plugin_id : STRING, version : STRING)`
+    * Get changes for plugin with ID `plugin_id` made in version `version`
+    * Throws `RepositoryNotInitializedException` when `Update ()` hasn't been called before
+    * Throws `NoSuchPluginException` when the given plugin is not in the repository
+- `GetPluginDescription (plugin_id : STRING)`
+    * Get description for given `plugin_id`
+    * Throws `RepositoryNotInitializedException` when `Update ()` hasn't been called before
+    * Throws `NoSuchPluginException` when the given plugin is not in the repository
+- `GetPluginName (plugin_id : STRING)`
+    * Get name of plugin with given `plugin_id`
+    * Throws `RepositoryNotInitializedException` when `Update ()` hasn't been called before
+    * Throws `NoSuchPluginException` when the given plugin is not in the repository
+- `GetPluginTags (plugin_id : STRING) : ARRAY(STRING)`
+    * Get tags for the plugin with ID `plugin_id`
+    * Throws `RepositoryNotInitializedException` when `Update ()` hasn't been called before
+    * Throws `NoSuchPluginException` when the given plugin is not in the repository
+- `GetPluginVersion (plugin_id : STRING)`
+    * Get the version of the specified plugin
+    * Throws `RepositoryNotInitializedException` when `Update ()` hasn't been called before
+    * Throws `NoSuchPluginException` when the given plugin is not in the repository
+- `GetPluginsWithTag (tag : STRING)`
+    * Returns all plugins that are tagged with `tag`.
+    * Throws `RepositoryNotInitializedException` when `Update ()` hasn't been called before
+- `GetTags ()`
+    * Get all available tags available in this repository
+    * Throws `RepositoryNotInitializedException` when `Update ()` hasn't been called before
 - `Close ()`
-    * Tell the <<NewStuff,NewStuff>> object that it isn't needed anymore
+    * Tell the <<AppObject,AppObject>> object that it isn't needed anymore
 
 [[DownloadManager]]
-=== DownloadManager
+DownloadManager
+~~~~~~~~~~~~~~~
 
-* *Interface:* org.gnome.NewStuffManager.DownloadManager
-* *Object's path:* /org/gnome/NewStuffManager/DownloadManager
+* *Interface:* org.gnome.Capuchin.DownloadManager
+* *Object's path:* /org/gnome/Capuchin/DownloadManager
 
 [[DownloadManager-signals]]
-==== Signals
+Signals
+^^^^^^^
 
-- `DownloadStatus (id : INTEGER, progress : DOUBLE)`
+- `DownloadStatus (id : INTEGER, progress : DOUBLE, speed : INTEGER)`
 	* `id`: The ID of the download
 	* `progress`: The fraction of the progress that's complete
+	* `speed`: The download speed
 - `DownloadFinished (id : INTEGER )`
 	* `id`: The ID of the download
 
 [[DownloadManager-methods]]
-==== Methods
+Methods
+^^^^^^^
 - `DownloadFile (url : STRING, destination : STRING) : INTEGER id`
 	* `id`: The ID of the download
 	* Starts download the file from `url` and stores it in the `destination` directory
 - `PauseDownload (id : INTEGER)`
 	* `id`: The ID of the download
+	* Throws `ArgumentOutOfRangeException` when a download with the given id doesn't exist
 - `AbortDownload (id : INTEGER)`
 	* `id`: The ID of the download
+	* Throws `ArgumentOutOfRangeException` when a download with the given id doesn't exist
 - `ResumeDownload (id : INTEGER)`
 	* `id`: The ID of the download
+	* Throws `ArgumentOutOfRangeException` when a download with the given id doesn't exist
 
 [[xml]]
 XML file format
 ---------------
 
-The XML file is the heart of NewStuffManager. Everything about the plugins is stored in this file.
+The XML file is the heart of Capuchin. Everything about the plugins is stored in this file.
 
 [NOTE]
 =======================================
@@ -109,79 +159,86 @@ http://www.relaxng.org/[Relax NG] is a schema language for XML. You can use http
 [xml]
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 <?xml version="1.0" encoding="utf-8" ?>
-<element name="items" xmlns="http://relaxng.org/ns/structure/1.0"
+<element name="repository" xmlns="http://relaxng.org/ns/structure/1.0"
  datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
-    <oneOrMore>
-        <element name="item">
-            <interleave>
-                <element name="id">
-                    <text />
-                </element>
-                <element name="name">
-                    <text />
-                </element>
-                <element name="url">
-                    <data type="anyURI" />
-                </element>
-                <element name="version">
-                    <text />
-                </element>
-                <optional>
-                    <element name="signature">
+    <element name="application">
+        <text />
+    </element> 
+    <element name="install-path">
+        <text />
+    </element>
+    <element name="items">
+        <oneOrMore>
+            <element name="item">
+                <interleave>
+                    <element name="id">
+                        <text />
+                    </element>
+                    <element name="name">
+                        <text />
+                    </element>
+                    <element name="url">
                         <data type="anyURI" />
                     </element>
-                    <element name="checksum">
-                        <attribute name="type">
-                            <choice>
-                                <value>sha1</value>
-                                <value>md5</value>
-                            </choice>
-                        </attribute>
+                    <element name="version">
                         <text />
                     </element>
-                </optional>
-                <optional>
-                    <element name="author">
-                        <attribute name="name"><text /></attribute>
-                        <attribute name="email"><text /></attribute>
-                    </element>
-                </optional>
-                <optional>
-                    <element name="description">
-                        <text />
-                    </element>
-                </optional>
-                <optional>
-                    <element name="tags">
-                        <oneOrMore>
-                            <element name="tag">
-                                <text />
-                            </element>
-                        </oneOrMore>
-                    </element>
-                </optional>
-            </interleave>
-        </element>
-    </oneOrMore>
+                    <optional>
+                        <element name="signature">
+                            <data type="anyURI" />
+                        </element>
+                        <element name="checksum">
+                            <attribute name="type">
+                                <choice>
+                                    <value>sha1</value>
+                                    <value>md5</value>
+                                </choice>
+                            </attribute>
+                            <text />
+                        </element>
+                    </optional>
+                    <optional>
+                        <element name="author">
+                            <attribute name="name"><text /></attribute>
+                            <attribute name="email"><text /></attribute>
+                        </element>
+                    </optional>
+                    <optional>
+                        <element name="description">
+                            <text />
+                        </element>
+                    </optional>
+                    <optional>
+                        <element name="tags">
+                            <oneOrMore>
+                                <element name="tag">
+                                    <text />
+                                </element>
+                            </oneOrMore>
+                        </element>
+                    </optional>
+                    <optional>
+                    	<element name="changelog">
+                    		<oneOrMore>
+                    			<element name="changes">
+	                    			<attribute name="version"><text /></attribute>
+	                    			<text />
+                    			</element>
+                    		</oneOrMore>
+                    	</element>
+                    </optional>
+                </interleave>
+            </element>
+        </oneOrMore>
+    </element>
 </element>
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+The `application` element should contain the name of the application the plugins belong to.
+`install-path` contains the full path to the directory where the plugins should be installed
+to. If it starts with `~` it's replaced by the user's home directory.
+
 [IMPORTANT]
 =======================================
-In order to get NewStuffManager working correctly you *must* provide a valid XML file. http://www.thaiopensource.com/relaxng/jing.html[Jing] helps validating.
+In order to get Capuchin working correctly you *must* provide a valid XML file. http://www.thaiopensource.com/relaxng/jing.html[Jing] helps validating.
 =======================================
-
-[[spec]]
-Spec file format
-----------------
-
-This file contains the locaction of the XML file on a webserver and the path to the directory where the plugins should be stored.
-The file must be saved in '$\{pkgdatadir\}/new-stuff-manager/specs', named after your application and have the ending '.conf'.
-The name of the file is needed to create a application specific <<NewStuff,NewStuff>> object.
-
---------------------------------------------------------------------
-[<your_application_name>]
-repo=http://www.example.com/path/to/repository2.xml
-install-path=~/where/to/install/plugins
---------------------------------------------------------------------
-

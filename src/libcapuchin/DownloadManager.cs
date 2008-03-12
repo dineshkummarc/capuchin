@@ -61,10 +61,20 @@ namespace Capuchin
         }
         
         /// <summary>Pause download</summary>
-        /// <param name="id">Download id as returned by <see cref="Capuchin.DownloadManager.DownloadFile" /></param>
+        /// <param name="id">
+		/// Download id as returned by <see cref="Capuchin.DownloadManager.DownloadFile" />
+		/// </param>
+		/// <exception cref="System.ArgumentOutOfRangeException">
+		/// Thrown when download id doesn't exist
+		/// </exception>
         public virtual void PauseDownload(int id)
         {
-            Log.Info("Paused download with id '{0}'", id);
+			Log.Info("Paused download with id '{0}'", id);			
+			
+			if (!this.Downloads.ContainsKey (id)) {
+				throw new ArgumentOutOfRangeException ("A download with id "+id+" does not exist");
+			}
+            
             lock (this) {
                 // Kill Downloader Thread
                 this.Downloads[id].Downloader.Abort();
@@ -72,10 +82,19 @@ namespace Capuchin
         }
         
         /// <summary>Abort download</summary>
-        /// <param name="id">Download id as returned by <see cref="Capuchin.DownloadManager.DownloadFile" /></param>
+        /// <param name="id">
+        /// Download id as returned by <see cref="Capuchin.DownloadManager.DownloadFile" />
+        /// </param>
+		/// <exception cref="System.ArgumentOutOfRangeException">
+		/// Thrown when download id doesn't exist
+		/// </exception>
         public virtual void AbortDownload(int id)
         {
             Log.Info("Aborted download with id '{0}'", id);
+			
+			if (!this.Downloads.ContainsKey (id)) {
+				throw new ArgumentOutOfRangeException ("A download with id "+id+" does not exist");
+			}
         
             lock (this) {
                 this.PauseDownload(id);
@@ -85,9 +104,18 @@ namespace Capuchin
         }
         
         /// <summary>Resume download</summary>
-        /// <param name="id">Download id as returned by <see cref="Capuchin.DownloadManager.DownloadFile" /></param>
+        /// <param name="id">
+        /// Download id as returned by <see cref="Capuchin.DownloadManager.DownloadFile" />
+        /// </param>
+		/// <exception cref="System.ArgumentOutOfRangeException">
+		/// Thrown when download id doesn't exist
+		/// </exception>
         public virtual void ResumeDownload(int id)
         {
+			if (!this.Downloads.ContainsKey (id)) {
+				throw new ArgumentOutOfRangeException ("A download with id "+id+" does not exist");
+			}
+			
             // Get file info
             FileInfo f = new FileInfo( this.Downloads[id].LocalFile );
             
