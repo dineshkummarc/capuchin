@@ -83,7 +83,8 @@ namespace Capuchin
         }
         
         /// <summary>Load the repository</summary>
-        /// <param name="force_update">Force downloading repository's XML file</param>
+        /// <param name="force_update">Whether to force to download the XML file from the server
+        /// or use the cached one, if no newer version is available</param>
 		/// <exception cref="Capuchin.RepositoryConnectionException">
         /// Thrown if connection to repository failed
         /// </exception>

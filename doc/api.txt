@@ -38,14 +38,14 @@ Signals
 ^^^^^^^
 
 - `UpdateFinished ()`
-    * Emited when the repository has been initialized after calling <<AppObject,AppObject>>.Update()
+    * Emitted when the repository has been initialized after calling <<AppObject,AppObject>>.Update()
 - `Status (action : STRING, plugin_id : STRING, progress : DOUBLE, speed : INTEGER)`
     * `action`: Current action (e.g. Downloading, Extracting)
     * `plugin_id`: The ID of the plugin that the status is related to
     * `progress`: The fraction of the progress that's complete (from 0 to 1), or -1.0 if no information is available on how long it will take
     * `speed`: Download speed
 - `InstallFinished (plugin_id : STRING)`
-    * Emited when the plugin has been downloaded and unpacked and is ready to be (re-)loaded by the application
+    * Emitted when the plugin has been downloaded and unpacked and is ready to be (re-)loaded by the application
 
 [[AppObject-methods]] 
 Methods
@@ -74,7 +74,7 @@ Furthermore, `plugin_id` must be a unique identifier that is known by the applic
     * Update the plugin with ID `plugin_id`
     * This method will download the file and extract the archive, if neccessary.
     * In addition, it makes a checksum test, if the checksum is provided and verifies a GnuPG signature, if the signature is provided.
-    * During the download the `Status` signal will be emited
+    * During the download the `Status` signal will be emitted
     * The method emits the `InstallFinished` signal when it has finished installing the new plugin
     * Throws `RepositoryNotInitializedException` when `Update ()` hasn't been called before
     * Throws `NoSuchPluginException` when the given plugin is not in the repository
