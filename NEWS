@@ -1,4 +1,10 @@
 =============
+Version 0.3.0
+=============
+Capuchin replaces NewStuffManager and comes with a completely rewritten
+D-Bus daemon, new D-Bus API and slightly changed XML file format.
+
+=============
 Version 0.2.3
 =============
 This release is build upon the managed D-Bus 0.5.2, because it's the first release
