@@ -56,28 +56,8 @@ PKG_CHECK_MODULES(GNOMEVFSSHARP, gnome-vfs-sharp-2.0 >= $GNOMEVFSSHARP_REQUIRED_
 dnl ****************************************************************************
 dnl * ndesk-dbus
 dnl ****************************************************************************
-AC_ARG_ENABLE([internal-dbus], AC_HELP_STRING([--enable-internal-dbus], [Use internal ndesk-dbus library (default: auto)]),
-enable_internal_ndeskdbus=$enableval, enable_internal_ndeskdbus=auto)
-
 NDESKDBUS_REQUIRED_VERSION=0.5.2
 PKG_CHECK_MODULES(NDESKDBUS, ndesk-dbus-1.0 >= $NDESKDBUS_REQUIRED_VERSION, has_ndeskdbus=yes, has_ndeskdbus=no)
-
-if test "x$has_ndeskdbus" = "xno"; then
-	if test "x$enable_internal_ndeskdbus" = "xno"; then
-		AC_MSG_ERROR([Could not find ndesk-dbus library])
-	fi
-	enable_internal_ndeskdbus="yes"
-	NDESKDBUS_LIBS="dbus-sharp/NDesk.DBus.dll"
-else
-	if test "x$enable_internal_ndeskdbus" = "xyes"; then
-		enable_internal_ndeskdbus="yes"
-		NDESKDBUS_LIBS= "dbus-sharp/NDesk.DBus.dll"
-	else
-		enable_internal_ndeskdbus="no"
-	fi
-fi
-AM_CONDITIONAL(ENABLE_INTERNAL_NDESKDBUS, test "x$enable_internal_ndeskdbus" = "xyes")
-AC_SUBST(NDESKDBUS_LIBS)
 
 dnl ****************************************************************************
 dnl * Check for DBUS Services directory
@@ -91,7 +71,6 @@ AC_DEFINE_UNQUOTED(DBUS_SERVICES_DIR, "$DBUS_SERVICES_DIR", [DBus services direc
 AC_OUTPUT([
 Makefile
 data/Makefile
-dbus-sharp/Makefile
 examples/Makefile
 capuchin-sharp.pc
 src/Makefile
@@ -112,5 +91,4 @@ capuchin-$VERSION
 
     Mono C# Compiler:             ${GMCS}
     Mono Runtime:                 ${MONO}
-    Use internal D-Bus library:   ${enable_internal_ndeskdbus}
 "

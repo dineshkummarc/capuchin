@@ -1,8 +1,4 @@
-SUBDIRS = data
-if ENABLE_INTERNAL_NDESKDBUS
-SUBDIRS += dbus-sharp
-endif
-SUBDIRS += src
+SUBDIRS = data src
 if WITH_EXAMPLES
 SUBDIRS += examples
 endif

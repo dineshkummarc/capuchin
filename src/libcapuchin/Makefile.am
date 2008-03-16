@@ -43,13 +43,8 @@ REFERENCES =  \
 	-r:System.Xml \
 	-r:ICSharpCode.SharpZipLib \
 	-r:Mono.Posix \
-	$(GNOMEVFSSHARP_LIBS)
-
-if ENABLE_INTERNAL_NDESKDBUS
-REFERENCES += -r:$(top_srcdir)/$(NDESKDBUS_LIBS)
-else
-REFERENCES += $(NDESKDBUS_LIBS)
-endif
+	$(GNOMEVFSSHARP_LIBS) \
+    $(NDESKDBUS_LIBS)
 
 libcapuchin_build_sources = $(addprefix $(srcdir)/, $(libcapuchin_sources))
 libcapuchin_build_sources += $(libcapuchin_generated_sources)
