@@ -4,3 +4,15 @@
 *.exe
 *.dll
 *~
+*.in
+config.guess
+config.sub
+config.status
+configure
+missing
+Makefile
+*.cache
+depcomp
+*.log
+INSTALL
+install-sh
