@@ -1,3 +1,0 @@
-[D-BUS Service]
-Name=org.gnome.NewStuffManager
-Exec=@bindir@/new-stuff-manager

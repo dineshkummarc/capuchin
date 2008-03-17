@@ -1,6 +1,0 @@
-MukkuMukku
-=================
-
-The idea for MukkuMukku came from the Deskbar-Applet team while they where searching for an easy way to keep the handlers up to date. The idea is to develop a Deskbar independent application so that other applications could use it, too. Such applications could be gedit, Epiphany, Rhythmbox, Banshee and many others. The goal of NewStuffManager is to make it very easy for developers to provide their application with an update/download service. Using NewStuffManager developers can easily update existing plugins or install new ones. The prototyp is implemented and Python and is ready for testing.
-
-D-Bus API and further details are available at http://www.k-d-w.org/NewStuffManager/
