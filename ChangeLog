@@ -1,3 +1,9 @@
+2008-03-18	Sebastian Pölsterl	<sebp@cvs.gnome.org>
+
+    * src/libcapuchin/Installation/Simple/SimpleInstaller.cs:
+    Fixed bug that downloaded file will be deleted even if
+    it's no archive
+
 2008-03-17	Sebastian Pölsterl	<sebp@cvs.gnome.org>
 
     * configure.ac:

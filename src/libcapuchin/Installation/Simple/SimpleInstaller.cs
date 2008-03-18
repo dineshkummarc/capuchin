@@ -44,9 +44,10 @@ namespace Capuchin.Installation.Simple
 			Decompresser decomp = new Decompresser(location, this.InstallPath);
             decomp.Run();
          
-            if (decomp.DeleteFile)
+            if (decomp.DeleteFile) {
                 Log.Info("Deleting archive {0}", location);
-			File.Delete(location);
+				File.Delete(location);
+			}
 		}
 	}
 }
