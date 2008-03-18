@@ -7,6 +7,7 @@ using System.Threading;
 using NDesk.DBus;
 using org.freedesktop.DBus;
 using Capuchin.Logging;
+using System.Text.RegularExpressions;
 
 namespace Capuchin
 {
@@ -32,7 +33,8 @@ namespace Capuchin
             if (this.Objects.ContainsKey(repository_url))
                 return this.Objects[repository_url];
             
-            string object_path = String.Format(CAPUCHIN_PATH, this.GetApplicationName(repository_url));
+			string object_path = String.Format(CAPUCHIN_PATH,
+			                                   this.MakeObjectPath(this.GetApplicationName(repository_url)) );
             ObjectPath new_stuff_opath = new ObjectPath (object_path);
  
             Log.Info ("Creating app object for {0} at {1}", repository_url, object_path);
@@ -45,6 +47,14 @@ namespace Capuchin
             return new_stuff_opath;
         }
         
+		protected string MakeObjectPath (string path)
+		{
+			Regex rx = new Regex (@"[^A-Za-z0-9_]");
+				
+			path = path.Replace ("/", "_");
+			return rx.Replace (path, "_");
+		}
+		
         protected void OnClosed(string repository_url)
         {
             Log.Info ("Unregistering {0}", this.Objects[repository_url]);          
