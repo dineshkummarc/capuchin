@@ -1,3 +1,8 @@
+2008-03-29	Sebastian Pölsterl	<sebp@cvs.gnome.org>
+
+    * src/libcapuchin/Downloaders/HttpDownloader.cs:
+    Added support for Content-Disposition
+
 2008-03-18	Sebastian Pölsterl	<sebp@cvs.gnome.org>
 
     * src/libcapuchin/AppObjectManager.cs:

@@ -32,13 +32,24 @@ namespace Capuchin.Downloaders
                 long fileSize = webResponse.ContentLength;
                 // Open the URL for download
                 strResponse = webResponse.GetResponseStream();
+				
+				string disposition = webResponse.Headers.Get ("Content-Disposition").ToLower();
+				string localFile;
+				if (disposition.StartsWith ("attachment"))
+				{
+					// Looks like: Content-Disposition: attachment; filename=genome.jpeg;
+					string filename = disposition.Split (';')[1].Split('=')[1].Replace("\"", "");
+					localFile = Path.Combine( base.dl.Destination, filename);
+				} else {
+					localFile = Path.Combine( base.dl.Destination, Path.GetFileName(base.dl.Url) );
+				}
                 
                 // Create a new file stream where we will be saving the data (local drive)
                 if (startPointInt == 0)
                 {
-                    strLocal = new FileStream(base.dl.LocalFile, FileMode.Create, FileAccess.Write, FileShare.None);
+                    strLocal = new FileStream(localFile, FileMode.Create, FileAccess.Write, FileShare.None);
                 } else {
-                    strLocal = new FileStream(base.dl.LocalFile, FileMode.Append, FileAccess.Write, FileShare.None);
+                    strLocal = new FileStream(localFile, FileMode.Append, FileAccess.Write, FileShare.None);
                 }
                 
                 // It will store the current number of bytes we retrieved from the server
