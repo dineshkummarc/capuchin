@@ -1,6 +1,15 @@
-new-stuff-manager
-=================
+Capuchin
+========
+Homepage: http://capuchin.k-d-w.org/
 
-The idea for NewStuffManager came from the Deskbar-Applet team while they where searching for an easy way to keep the handlers up to date. The idea is to develop a Deskbar independent application so that other applications could use it, too. Such applications could be gedit, Epiphany, Rhythmbox, Banshee and many others. The goal of NewStuffManager is to make it very easy for developers to provide their application with an update/download service. Using NewStuffManager developers can easily update existing plugins or install new ones. The prototyp is implemented and Python and is ready for testing.
+Capuchin is an open-source program that runs in the background,
+downloads and installs plugins. It can be used by any application through its D-Bus interface.
+It's licensed under the GNU General Public License (GPL) Version 2.
 
-D-Bus API and further details are available at http://www.k-d-w.org/clipboard/NewStuffManager/
+The idea for Capuchin emerged from the Deskbar-Applet project. The goal for Capuchin is to provide
+an easy way to upgrade plugins of any application. Therefore, it is very easy for developers
+to enhance their application with a plugin update service.
+
+The frist prototyp was written in Python. The current version is written in C# using Mono
+and runs in the background as a D-Bus service. An application that wants to use Capuchin
+connects to its D-Bus Interface and calls the appropriate method and Capuchin simply does its job.
