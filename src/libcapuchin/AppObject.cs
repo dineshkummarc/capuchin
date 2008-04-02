@@ -43,7 +43,6 @@ namespace Capuchin
     /// </summary>
     public class AppObject : IDisposable, IAppObject
     {
-        public event UpdateFinishedHandler UpdateFinished;
         public event InstallFinishedHandler InstallFinished;
         public event StatusHandler Status;
         
@@ -147,8 +146,6 @@ namespace Capuchin
             this.ApplicationName = repo.application;
             
             this.fillTagToPlugins ();
-            
-            this.OnUpdateFinished();
         }
         
         /// <returns>
@@ -517,14 +514,6 @@ namespace Capuchin
         {
             if (this.RepoItems == null) {
                 throw new RepositoryNotInitializedException ("The repository is not initialized. You have to call Update first.");
-            }
-        }
-        
-        protected void OnUpdateFinished ()
-        {
-            if (UpdateFinished != null)
-            {
-                UpdateFinished ();
             }
         }
         

@@ -33,14 +33,12 @@ namespace Capuchin
         ExtractingPlugin
     }
     
-    public delegate void UpdateFinishedHandler ();
     public delegate void InstallFinishedHandler (string plugin_id);
     public delegate void StatusHandler (ActionType action, string plugin_id, double progress, int speed);
             
     [Interface("org.gnome.Capuchin.AppObject")]
     public interface IAppObject
     {
-        event UpdateFinishedHandler UpdateFinished;
         event InstallFinishedHandler InstallFinished;
         event StatusHandler Status;
         

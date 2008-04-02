@@ -1,5 +1,12 @@
 2008-04-02	Sebastian Pölsterl	<sebp@cvs.gnome.org>
 
+    * src/libcapuchin/AppObjectManager.cs:
+    * src/libcapuchin/AppObject.cs:
+    Removed UpdateFinished signal, because
+    it's not needed anymore.
+    
+2008-04-02	Sebastian Pölsterl	<sebp@cvs.gnome.org>
+
     Added GPLv2 header to each file and converted tabs to spaces
 
 2008-04-02	Sebastian Pölsterl	<sebp@cvs.gnome.org>
