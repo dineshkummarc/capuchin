@@ -1,3 +1,26 @@
+/*
+ * This file is part of Capuchin
+ * 
+ * Copyright (C) Sebastian Pölsterl 2008 <marduk@k-d-w.org>
+ * 
+ * Capuchin is free software.
+ * 
+ * You may redistribute it and/or modify it under the terms of the
+ * GNU General Public License, as published by the Free Software
+ * Foundation; either version 2 of the License, or (at your option)
+ * any later version.
+ * 
+ * Capuchin is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with Capuchin.  If not, write to:
+ * 	The Free Software Foundation, Inc.,
+ * 	51 Franklin Street, Fifth Floor
+ * 	Boston, MA  02110-1301, USA.
+ */
 
 using System;
 using System.IO;
@@ -32,17 +55,17 @@ namespace Capuchin.Downloaders
                 long fileSize = webResponse.ContentLength;
                 // Open the URL for download
                 strResponse = webResponse.GetResponseStream();
-				
-				string disposition = webResponse.Headers.Get ("Content-Disposition");
-				string localFile;
-				if (disposition != null && disposition.ToLower().StartsWith ("attachment"))
-				{
-					// Looks like: Content-Disposition: attachment; filename=genome.jpeg;
-					string filename = disposition.Split (';')[1].Split('=')[1].Replace("\"", "");
-					localFile = Path.Combine( base.dl.Destination, filename);
-				} else {
-					localFile = Path.Combine( base.dl.Destination, Path.GetFileName(base.dl.Url) );
-				}
+
+                string disposition = webResponse.Headers.Get ("Content-Disposition");
+                string localFile;
+                if (disposition != null && disposition.ToLower().StartsWith ("attachment"))
+                {
+                    // Looks like: Content-Disposition: attachment; filename=genome.jpeg;
+                    string filename = disposition.Split (';')[1].Split('=')[1].Replace("\"", "");
+                    localFile = Path.Combine( base.dl.Destination, filename);
+                } else {
+                    localFile = Path.Combine( base.dl.Destination, Path.GetFileName(base.dl.Url) );
+                }
                 
                 // Create a new file stream where we will be saving the data (local drive)
                 if (startPointInt == 0)

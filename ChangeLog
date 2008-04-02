@@ -1,5 +1,9 @@
 2008-04-02	Sebastian Pölsterl	<sebp@cvs.gnome.org>
 
+    Added GPLv2 header to each file and converted tabs to spaces
+
+2008-04-02	Sebastian Pölsterl	<sebp@cvs.gnome.org>
+
     * src/libcapuchin/Downloaders/AbstractDownloader.cs:
     * src/libcapuchin/AppObjectManager.cs:
     * src/libcapuchin/AppObject.cs:
