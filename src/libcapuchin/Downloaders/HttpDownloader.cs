@@ -33,9 +33,9 @@ namespace Capuchin.Downloaders
                 // Open the URL for download
                 strResponse = webResponse.GetResponseStream();
 				
-				string disposition = webResponse.Headers.Get ("Content-Disposition").ToLower();
+				string disposition = webResponse.Headers.Get ("Content-Disposition");
 				string localFile;
-				if (disposition.StartsWith ("attachment"))
+				if (disposition != null && disposition.ToLower().StartsWith ("attachment"))
 				{
 					// Looks like: Content-Disposition: attachment; filename=genome.jpeg;
 					string filename = disposition.Split (';')[1].Split('=')[1].Replace("\"", "");
