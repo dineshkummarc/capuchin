@@ -8,7 +8,7 @@ namespace Capuchin.Downloaders
 {
     
     internal delegate void StatusHandler(int id, double progress, int speed);
-    internal delegate void FinishedHandler(int id);
+    internal delegate void FinishedHandler(AbstractDownloader downloader, int id);
     
     /// <summary>Abstract base class to download a file</summary>
     internal abstract class AbstractDownloader : IDisposable
@@ -75,7 +75,7 @@ namespace Capuchin.Downloaders
         /// <summary>Emits the finished signal</summary>
         protected void OnFinished() {
             if (Finished != null) {
-                Finished(this.Id);
+                Finished(this, this.Id);
             }
         }
     }

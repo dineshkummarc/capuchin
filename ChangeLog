@@ -1,5 +1,12 @@
 2008-04-02	Sebastian Pölsterl	<sebp@cvs.gnome.org>
 
+    * src/libcapuchin/Downloaders/AbstractDownloader.cs:
+    * src/libcapuchin/AppObjectManager.cs:
+    * src/libcapuchin/AppObject.cs:
+    Made AppObject.Update a blocking call.
+
+2008-04-02	Sebastian Pölsterl	<sebp@cvs.gnome.org>
+
     * src/libcapuchin/Downloaders/HttpDownloader.cs:
     Fixed null pointer exception when Content-Disposition
     isn't available

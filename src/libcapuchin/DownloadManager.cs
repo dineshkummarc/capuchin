@@ -16,14 +16,17 @@ namespace Capuchin
         
         public delegate void DownloaderDel(object startPoint);
         
+        public const int BLOCKING_DOWNLOAD_ID = -1;
+        
         internal Dictionary<int, Download> Downloads;
         
         private int downloadsIndex;
+        private int blockingDownloadId;
         
         public DownloadManager()
         {
             this.Downloads = new Dictionary<int, Download>();
-            this.downloadsIndex = 0;
+            this.downloadsIndex = 0; 
         }
         
         /// <summary>Download a file using the DownloadManager</summary>
@@ -39,7 +42,8 @@ namespace Capuchin
         /// An <see cref="Capuchin.Downloaders.AbstractDownloader" /> instance to
         /// download the given file
         /// </returns>
-        internal int DownloadFile (string download_url, string download_dest, string signature, checksum checksumField)
+        internal int DownloadFile (string download_url, string download_dest,
+                                   string signature, checksum checksumField)
         {
             Download dl = new Download(this.downloadsIndex, download_url, download_dest, signature, checksumField);
             
@@ -55,25 +59,37 @@ namespace Capuchin
                 downloaderThread.Start();
             }
             
-            Log.Info("Started downloading file {0} to {1} with id '{2}'", download_url, download_dest, this.downloadsIndex-1);
+            Log.Info("Started downloading file {0} to {1} with id '{2}'",
+                     download_url, download_dest, this.downloadsIndex-1);
             
             return (this.downloadsIndex-1);
+        }
+    
+        internal void DownloadFileBlocking (string download_url, string download_dest)
+        {
+            Download dl = new Download(this.downloadsIndex, download_url, download_dest, null, null);            
+            
+            Downloaders.AbstractDownloader downloader = this.GetDownloader(BLOCKING_DOWNLOAD_ID, dl);
+            downloader.Status += new Downloaders.StatusHandler( this.OnDownloadStatus );
+            downloader.Finished += new Downloaders.FinishedHandler( this.DownloadFinishedCallback );
+            
+            downloader.Download ();
         }
         
         /// <summary>Pause download</summary>
         /// <param name="id">
-		/// Download id as returned by <see cref="Capuchin.DownloadManager.DownloadFile" />
-		/// </param>
-		/// <exception cref="System.ArgumentOutOfRangeException">
-		/// Thrown when download id doesn't exist
-		/// </exception>
+        /// Download id as returned by <see cref="Capuchin.DownloadManager.DownloadFile" />
+        /// </param>
+        /// <exception cref="System.ArgumentOutOfRangeException">
+        /// Thrown when download id doesn't exist
+        /// </exception>
         public virtual void PauseDownload(int id)
         {
-			Log.Info("Paused download with id '{0}'", id);			
-			
-			if (!this.Downloads.ContainsKey (id)) {
-				throw new ArgumentOutOfRangeException ("A download with id "+id+" does not exist");
-			}
+            Log.Info("Paused download with id '{0}'", id);            
+            
+            if (!this.Downloads.ContainsKey (id)) {
+                throw new ArgumentOutOfRangeException ("A download with id "+id+" does not exist");
+            }
             
             lock (this) {
                 // Kill Downloader Thread
@@ -85,16 +101,16 @@ namespace Capuchin
         /// <param name="id">
         /// Download id as returned by <see cref="Capuchin.DownloadManager.DownloadFile" />
         /// </param>
-		/// <exception cref="System.ArgumentOutOfRangeException">
-		/// Thrown when download id doesn't exist
-		/// </exception>
+        /// <exception cref="System.ArgumentOutOfRangeException">
+        /// Thrown when download id doesn't exist
+        /// </exception>
         public virtual void AbortDownload(int id)
         {
             Log.Info("Aborted download with id '{0}'", id);
-			
-			if (!this.Downloads.ContainsKey (id)) {
-				throw new ArgumentOutOfRangeException ("A download with id "+id+" does not exist");
-			}
+            
+            if (!this.Downloads.ContainsKey (id)) {
+                throw new ArgumentOutOfRangeException ("A download with id "+id+" does not exist");
+            }
         
             lock (this) {
                 this.PauseDownload(id);
@@ -107,15 +123,15 @@ namespace Capuchin
         /// <param name="id">
         /// Download id as returned by <see cref="Capuchin.DownloadManager.DownloadFile" />
         /// </param>
-		/// <exception cref="System.ArgumentOutOfRangeException">
-		/// Thrown when download id doesn't exist
-		/// </exception>
+        /// <exception cref="System.ArgumentOutOfRangeException">
+        /// Thrown when download id doesn't exist
+        /// </exception>
         public virtual void ResumeDownload(int id)
         {
-			if (!this.Downloads.ContainsKey (id)) {
-				throw new ArgumentOutOfRangeException ("A download with id "+id+" does not exist");
-			}
-			
+            if (!this.Downloads.ContainsKey (id)) {
+                throw new ArgumentOutOfRangeException ("A download with id "+id+" does not exist");
+            }
+            
             // Get file info
             FileInfo f = new FileInfo( this.Downloads[id].LocalFile );
             
@@ -154,13 +170,22 @@ namespace Capuchin
             }
         }
             
-        protected void DownloadFinishedCallback(int id)
+        private void DownloadFinishedCallback(Downloaders.AbstractDownloader downloader, int id)
         {
             Log.Info("Finished downloading file with id '{0}'", id);
+            
+            // Don't report finished signal when download is called blocking
+            if (id == BLOCKING_DOWNLOAD_ID) return;
             
             lock (this) {
                 // Remove Download
                 this.Downloads.Remove(id);
+            
+                // TODO: Maybe dangerous when disconnecting while other download
+                // is still running?
+                // Disconnect signals
+                downloader.Status -= new Downloaders.StatusHandler( this.OnDownloadStatus );
+                downloader.Finished -= new Downloaders.FinishedHandler( this.DownloadFinishedCallback );
             }
             
             this.OnDownloadFinished(id);
