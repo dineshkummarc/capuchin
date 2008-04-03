@@ -1,5 +1,11 @@
 2008-04-02	Sebastian Pölsterl	<sebp@cvs.gnome.org>
 
+    * examples/testapp.cs:
+    * examples/testapp.py:
+    Adjusted examples to API change
+
+2008-04-02	Sebastian Pölsterl	<sebp@cvs.gnome.org>
+
     * src/libcapuchin/AppObjectManager.cs:
     * src/libcapuchin/AppObject.cs:
     Removed UpdateFinished signal, because

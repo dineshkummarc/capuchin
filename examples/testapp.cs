@@ -29,7 +29,6 @@ public class TestCapuchin
 		this.appobject = bus.GetObject<Capuchin.IAppObject> (CAPUCHIN_SERVICE, path);
 		this.appobject.InstallFinished += new Capuchin.InstallFinishedHandler ( this.OnInstallFinished );
 		this.appobject.Status += new Capuchin.StatusHandler ( this.OnStatus );
-		this.appobject.UpdateFinished += new Capuchin.UpdateFinishedHandler ( delegate () { ContinueMain(); } );
 	}
 	
 	protected void OnInstallFinished(string plugin_id)
@@ -41,7 +40,7 @@ public class TestCapuchin
 	{
 		Console.WriteLine ("DOWNLOAD: {0} {1} {2} {3}", action, plugin_id, progress, speed);
 	}
-	
+        
 	public void testUpdate()
 	{
 		this.appobject.Update(false);
@@ -118,9 +117,11 @@ public class TestCapuchin
 		this.appobject.Close();
 	}
 	
-	public static void ContinueMain()
+	public static void Main (string[] args)
 	{
-        test.testGetApplicationName();
+		test.testGetAppObject();
+        test.testUpdate();
+		test.testGetApplicationName();
         test.testGetAvailablePlugins();
 		test.testGetAvailableUpdates();
 		test.testGetTags ();
@@ -128,12 +129,5 @@ public class TestCapuchin
 		test.testInstall();
 		Thread.Sleep(10000); // Wait 5s for update to complete, because we have no mainloop
 		test.testClose();
-	}
-	
-	public static void Main (string[] args)
-	{
-		test.testGetAppObject();
-        test.testUpdate();
-		Thread.Sleep(5000); // Wait 5s for update to complete, because we have no mainloop
 	}
 }

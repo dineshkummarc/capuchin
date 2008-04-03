@@ -32,7 +32,6 @@ class TestApp:
         
         self.appobject.connect_to_signal('InstallFinished', self.on_install_finished)
         self.appobject.connect_to_signal('Status', self.on_status)
-        self.appobject.connect_to_signal('UpdateFinished', self.on_update_finished)
         
     def on_install_finished(self, plugin_id):
         print "appobject updated: %s" % plugin_id
@@ -52,8 +51,11 @@ class TestApp:
     def on_status(self, action, plugin_id, progress, speed):
         print "DOWNLOAD: %s %s %s %s" % (action, plugin_id, progress, speed)
         
+    def on_error(self, error):
+        print "ERROR: " +error
+        
     def testUpdate(self):
-        self.appobject.Update(False)
+        self.appobject.Update(False, reply_handler=self.on_update_finished, error_handler=self.on_error)
         
     def testGetAvailablePlugins(self):
         stuff = self.appobject.GetAvailablePlugins();
