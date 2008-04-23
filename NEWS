@@ -1,4 +1,18 @@
 =============
+Version 0.3.1
+=============
+In this release the behavior of AppObject's Update method changed.
+It's now always called blocking, therefore the UpdateFinished signal
+has been removed.
+
+Changes:
+    * Fixed bug that downloaded file will be deleted even if it's no archive
+    * Strip bad characters from object path
+    * Added support for Content-Disposition
+    * Made AppObject.Update a blocking call.
+    * Removed UpdateFinished signal, because it's not needed anymore.
+
+=============
 Version 0.3.0
 =============
 Capuchin replaces NewStuffManager and comes with a completely rewritten
