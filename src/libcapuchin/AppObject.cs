@@ -60,7 +60,6 @@ namespace Capuchin
         
         private const int SLEEP_TIME = 500;
         private bool disposed = false;
-        private int repo_dlid = -1;
         
         /// <param name="repository_url">URL to repository's XML file</param>
         public AppObject (string repository_url)
@@ -567,7 +566,7 @@ namespace Capuchin
             
         private void OnDownloadStatus (int dlid, double progress, int speed)
         {
-            if (dlid == this.repo_dlid)
+            if (dlid == DownloadManager.BLOCKING_DOWNLOAD_ID)
             {
                 this.OnStatus (ActionType.UpdatingRepo, "", progress, speed);
             } else {
@@ -582,7 +581,8 @@ namespace Capuchin
         
         private void OnDownloadFinished (int dlid)
         {
-            if (dlid == this.repo_dlid) {
+            if (dlid == DownloadManager.BLOCKING_DOWNLOAD_ID) {
+                this.OnInstallFinished("INDEX");
                 return;
             }
             

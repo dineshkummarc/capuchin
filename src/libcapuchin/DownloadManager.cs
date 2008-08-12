@@ -44,7 +44,6 @@ namespace Capuchin
         internal Dictionary<int, Download> Downloads;
         
         private int downloadsIndex;
-        private int blockingDownloadId;
         
         public DownloadManager()
         {
@@ -198,18 +197,18 @@ namespace Capuchin
             Log.Info("Finished downloading file with id '{0}'", id);
             
             // Don't report finished signal when download is called blocking
-            if (id == BLOCKING_DOWNLOAD_ID) return;
-            
-            lock (this) {
-                // Remove Download
-                this.Downloads.Remove(id);
-            
-                // TODO: Maybe dangerous when disconnecting while other download
-                // is still running?
-                // Disconnect signals
-                downloader.Status -= new Downloaders.StatusHandler( this.OnDownloadStatus );
-                downloader.Finished -= new Downloaders.FinishedHandler( this.DownloadFinishedCallback );
+            if (id != BLOCKING_DOWNLOAD_ID) {
+                lock (this) {
+                    // Remove Download
+                    this.Downloads.Remove(id);
+                }
             }
+            
+            // TODO: Maybe dangerous when disconnecting while other download
+            // is still running?
+            // Disconnect signals
+            downloader.Status -= new Downloaders.StatusHandler( this.OnDownloadStatus );
+            downloader.Finished -= new Downloaders.FinishedHandler( this.DownloadFinishedCallback );
             
             this.OnDownloadFinished(id);
         }
