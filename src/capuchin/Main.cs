@@ -28,17 +28,17 @@ class MainClass
 	public static void Main(string[] args)
 	{
 		opts.ProcessArgs(args);
-	    CreateConfigDirIfNotExists();
+	    CreateLogDirIfNotExists();
 		
         if (opts.debug)
         {
-            Capuchin.Logging.Log.Initialize(Capuchin.Globals.Instance.LOCAL_CONFIG_DIR,
+            Capuchin.Logging.Log.Initialize(Capuchin.Globals.Instance.LOG_FILES_DIR,
                                             "capuchin",
                                             Capuchin.Logging.LogLevel.Debug,
                                             true
                                             );
         } else {
-            Capuchin.Logging.Log.Initialize(Capuchin.Globals.Instance.LOCAL_CONFIG_DIR,
+            Capuchin.Logging.Log.Initialize(Capuchin.Globals.Instance.LOG_FILES_DIR,
                                             "capuchin",
                                             Capuchin.Logging.LogLevel.Error,
                                             true
@@ -62,12 +62,12 @@ class MainClass
 		}
 	}
 	
-    private static void CreateConfigDirIfNotExists()
+    private static void CreateLogDirIfNotExists()
 	{
-	   if (!Directory.Exists(Capuchin.Globals.Instance.LOCAL_CONFIG_DIR))
+	   if (!Directory.Exists(Capuchin.Globals.Instance.LOG_FILES_DIR))
        {
-          Capuchin.Logging.Log.Debug("Creating directory {0}", Capuchin.Globals.Instance.LOCAL_CONFIG_DIR);
-           Directory.CreateDirectory(Capuchin.Globals.Instance.LOCAL_CONFIG_DIR);
+          Capuchin.Logging.Log.Debug("Creating directory {0}", Capuchin.Globals.Instance.LOG_FILES_DIR);
+           Directory.CreateDirectory(Capuchin.Globals.Instance.LOG_FILES_DIR);
        }
     }
 

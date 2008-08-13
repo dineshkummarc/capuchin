@@ -7,16 +7,27 @@ namespace Capuchin
     public sealed class Globals
     {    
         public const string GPG_BIN = "@GPG@";
-        public readonly string LOCAL_CONFIG_DIR;
         public readonly string LOCAL_CACHE_DIR;
+        public readonly string LOG_FILES_DIR;
         
         public static readonly Globals Instance = new Globals();
         public static readonly DownloadManager DLM = new DownloadManager();
         
         private Globals()
-        {
-            this.LOCAL_CONFIG_DIR = Path.Combine ( Environment.GetFolderPath(Environment.SpecialFolder.Personal), ".capuchin" );
-            this.LOCAL_CACHE_DIR = Path.Combine (this.LOCAL_CONFIG_DIR, "cache");
+        { 
+            this.LOG_FILES_DIR = Path.Combine (Environment.GetFolderPath (
+                Environment.SpecialFolder.Personal), ".capuchin");
+            this.LOCAL_CACHE_DIR = Path.Combine (GetXDGCacheDir (), "capuchin");
+        }
+        
+        private static string GetXDGCacheDir () {
+            string cachedir = Environment.GetEnvironmentVariable ("XDG_CACHE_HOME");
+            if (cachedir == null) {
+                cachedir = Path.Combine (Environment.GetFolderPath (
+                    Environment.SpecialFolder.Personal), ".cache" );
+            }
+            
+            return cachedir;
         }
         
     }
