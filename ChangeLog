@@ -1,3 +1,11 @@
+2008-08-13	Sebastian Pölsterl	<sebp@cvs.gnome.org>
+
+	* src/libcapuchin/Globals.cs.in
+	* src/capuchin/Main.cs:
+	Store repository XML files in $XDG_CACHE_HOME/capuchin
+	or $HOME/.cache/capuchin. Log files are still stored
+	in $HOME/.capuchin
+	
 2008-08-12	Sebastian Pölsterl	<sebp@cvs.gnome.org>
 
 	* src/libcapuchin/AppObject.cs
