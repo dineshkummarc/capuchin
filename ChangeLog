@@ -1,3 +1,8 @@
+2008-08-31	Sebastian Pölsterl	<sebp@cvs.gnome.org>
+
+	* configure.ac:
+	Require ndesk-dbus
+
 2008-08-13	Sebastian Pölsterl	<sebp@cvs.gnome.org>
 
 	* src/libcapuchin/Globals.cs.in

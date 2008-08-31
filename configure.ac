@@ -57,7 +57,7 @@ dnl ****************************************************************************
 dnl * ndesk-dbus
 dnl ****************************************************************************
 NDESKDBUS_REQUIRED_VERSION=0.5.2
-PKG_CHECK_MODULES(NDESKDBUS, ndesk-dbus-1.0 >= $NDESKDBUS_REQUIRED_VERSION, has_ndeskdbus=yes, has_ndeskdbus=no)
+PKG_CHECK_MODULES(NDESKDBUS, ndesk-dbus-1.0 >= $NDESKDBUS_REQUIRED_VERSION)
 
 dnl ****************************************************************************
 dnl * Check for DBUS Services directory
