@@ -1,4 +1,14 @@
 =============
+Version 0.3.2
+=============
+This release just fixes a bug in AppObject.Update
+and stores repository files in $XDG_CACHE_HOME dir.
+
+	* Emit Status and InstallFinished when calling AppObject.Update. 'INDEX' is used as plugin id.
+	* Store repository XML files in $XDG_CACHE_HOME/capuchin or $HOME/.cache/capuchin. Log files are still stored in $HOME/.capuchin
+	* Require ndesk-dbus
+
+=============
 Version 0.3.1
 =============
 In this release the behavior of AppObject's Update method changed.
